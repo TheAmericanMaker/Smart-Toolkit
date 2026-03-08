@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.mlkit.barcode)
     implementation(libs.concurrent.futures)
     implementation(libs.concurrent.futures.ktx)
+    implementation(libs.guava)
 
     // Coroutines
     implementation(libs.coroutines.android)

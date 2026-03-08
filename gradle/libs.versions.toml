@@ -17,6 +17,7 @@ junit = "4.13.2"
 coroutines = "1.9.0"
 play-services-ads = "23.6.0"
 concurrent-futures = "1.2.0"
+guava = "33.4.0-android"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -57,6 +58,7 @@ play-services-ads = { group = "com.google.android.gms", name = "play-services-ad
 
 concurrent-futures = { group = "androidx.concurrent", name = "concurrent-futures", version.ref = "concurrent-futures" }
 concurrent-futures-ktx = { group = "androidx.concurrent", name = "concurrent-futures-ktx", version.ref = "concurrent-futures" }
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
