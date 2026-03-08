@@ -1,7 +1,13 @@
 package com.smartutilities.app
 
 import android.app.Application
+import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class SmartUtilitiesApp : Application()
+class SmartUtilitiesApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        MobileAds.initialize(this)
+    }
+}

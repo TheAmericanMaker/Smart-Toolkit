@@ -83,6 +83,9 @@ dependencies {
     // Coroutines
     implementation(libs.coroutines.android)
 
+    // Ads
+    implementation(libs.play.services.ads)
+
     // Testing
     testImplementation(libs.junit)
 }
