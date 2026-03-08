@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
     implementation(libs.mlkit.barcode)
+    implementation(libs.concurrent.futures)
 
     // Coroutines
     implementation(libs.coroutines.android)

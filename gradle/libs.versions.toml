@@ -16,6 +16,7 @@ navigation-compose = "2.8.5"
 junit = "4.13.2"
 coroutines = "1.9.0"
 play-services-ads = "23.6.0"
+concurrent-futures = "1.2.0"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -53,6 +54,8 @@ mlkit-barcode = { group = "com.google.mlkit", name = "barcode-scanning", version
 coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
 play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "play-services-ads" }
+
+concurrent-futures = { group = "androidx.concurrent", name = "concurrent-futures", version.ref = "concurrent-futures" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
