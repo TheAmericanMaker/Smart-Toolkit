@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import com.smartutilities.app.ui.components.AdBanner
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -70,7 +72,7 @@ fun HomeScreen(
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.weight(1f)
             ) {
                 if (state.favoriteUtilities.isNotEmpty() && state.searchQuery.isBlank()) {
                     item(span = { GridItemSpan(3) }) {
@@ -105,6 +107,10 @@ fun HomeScreen(
                     )
                 }
             }
+
+            AdBanner(
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
     }
 }
