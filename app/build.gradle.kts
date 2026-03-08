@@ -80,6 +80,7 @@ dependencies {
     implementation(libs.camerax.view)
     implementation(libs.mlkit.barcode)
     implementation(libs.concurrent.futures)
+    implementation(libs.concurrent.futures.ktx)
 
     // Coroutines
     implementation(libs.coroutines.android)
