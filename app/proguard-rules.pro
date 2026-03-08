@@ -1,3 +1,6 @@
+# AdMob
+-keep class com.google.android.gms.ads.** { *; }
+
 # ML Kit
 -keep class com.google.mlkit.** { *; }
 -dontwarn com.google.mlkit.**
