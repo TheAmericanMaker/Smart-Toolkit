@@ -1,0 +1,104 @@
+# Smart Utilities
+
+A collection of 16 handy everyday tools in one Android app. Built with Jetpack Compose and Material 3.
+
+## Features
+
+| Utility | Description |
+|---------|-------------|
+| Flashlight | Toggle device flashlight on/off |
+| Stopwatch | Precision stopwatch with lap tracking |
+| Timer | Countdown timer with alarm and vibration |
+| Calculator | Basic and scientific calculator with expression parsing |
+| Battery | Real-time battery status, temperature, voltage, and health |
+| Compass | Digital compass with animated compass rose |
+| Network | Connection type, IP address, WiFi signal info |
+| Storage | Internal/external storage usage analyzer |
+| Ruler | On-screen ruler (cm and inches) |
+| QR Scanner | Scan QR codes and barcodes using CameraX + ML Kit |
+| Unit Converter | Convert between units across 7 categories |
+| Text Tools | Character/word/sentence counts, case transforms, clipboard |
+| Random Generator | Random numbers, dice, coin flip, password generator |
+| Notepad | Simple note-taking with local Room database |
+| Device Info | Model, CPU, RAM, screen specs, Android version |
+| Sound Meter | Approximate ambient sound level measurement |
+
+## Screenshots
+
+*Coming soon*
+
+## Tech Stack
+
+- **Language:** Kotlin
+- **UI:** Jetpack Compose + Material 3 with dynamic color
+- **Architecture:** MVVM with StateFlow
+- **DI:** Hilt
+- **Navigation:** Navigation Compose
+- **Local Storage:** Room (notes), DataStore Preferences (settings/favorites)
+- **Camera:** CameraX + ML Kit Barcode Scanning
+- **Min SDK:** 26 (Android 8.0)
+- **Target SDK:** 34 (Android 14)
+
+## Building
+
+### Prerequisites
+
+- Android Studio Hedgehog or newer
+- JDK 17
+
+### Build Debug APK
+
+```bash
+./gradlew assembleDebug
+```
+
+The APK will be at `app/build/outputs/apk/debug/app-debug.apk`.
+
+### Build Release APK
+
+```bash
+./gradlew assembleRelease
+```
+
+> Note: Release builds require signing configuration. See [Android signing docs](https://developer.android.com/studio/publish/app-signing).
+
+## CI/CD
+
+This project uses GitHub Actions to automatically build a debug APK on every push to `main` and on pull requests. Download the APK from the workflow artifacts.
+
+## Project Structure
+
+```
+app/src/main/java/com/smartutilities/app/
+├── MainActivity.kt              # Single activity entry point
+├── SmartUtilitiesApp.kt         # Hilt application class
+├── navigation/                  # Route definitions and NavHost
+├── ui/
+│   ├── theme/                   # Material 3 theme, colors, typography
+│   ├── home/                    # Dashboard with search and favorites
+│   ├── settings/                # Dark mode and app settings
+│   └── components/              # Shared UI components
+├── feature/                     # One package per utility
+│   ├── flashlight/
+│   ├── stopwatch/
+│   ├── timer/
+│   ├── calculator/
+│   ├── battery/
+│   ├── compass/
+│   ├── network/
+│   ├── storage/
+│   ├── ruler/
+│   ├── qrscanner/
+│   ├── unitconverter/
+│   ├── texttools/
+│   ├── randomgenerator/
+│   ├── notepad/
+│   ├── deviceinfo/
+│   └── soundmeter/
+├── data/                        # Room database, DataStore, models
+└── di/                          # Hilt modules
+```
+
+## License
+
+See [LICENSE](LICENSE) for details.
