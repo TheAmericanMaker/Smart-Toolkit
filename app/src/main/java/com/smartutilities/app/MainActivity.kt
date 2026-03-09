@@ -11,7 +11,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.smartutilities.app.navigation.NavGraph
 import com.smartutilities.app.ui.settings.SettingsViewModel
-import com.smartutilities.app.ui.theme.SmartUtilitiesTheme
+import com.smartutilities.app.ui.theme.SmartToolkitTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
 
             val darkTheme = if (settingsState.useSystemTheme) systemDark else settingsState.darkMode
 
-            SmartUtilitiesTheme(darkTheme = darkTheme) {
+            SmartToolkitTheme(darkTheme = darkTheme) {
                 val navController = rememberNavController()
                 NavGraph(navController = navController)
             }

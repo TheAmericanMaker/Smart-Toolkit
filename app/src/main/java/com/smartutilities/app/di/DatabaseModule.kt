@@ -21,7 +21,7 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "smart_utilities.db"
+            "smart_toolkit.db"
         ).build()
     }
 
