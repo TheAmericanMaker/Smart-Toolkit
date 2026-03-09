@@ -2,13 +2,16 @@ package com.smartutilities.app.feature.ruler
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,10 +42,25 @@ fun RulerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(horizontal = 16.dp)
         ) {
-            TextButton(onClick = viewModel::toggleUnit) {
-                Text(if (state.isMetric) "Switch to Inches" else "Switch to Centimeters")
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row {
+                FilterChip(
+                    selected = state.isMetric,
+                    onClick = { if (!state.isMetric) viewModel.toggleUnit() },
+                    label = { Text("cm / mm") }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                FilterChip(
+                    selected = !state.isMetric,
+                    onClick = { if (state.isMetric) viewModel.toggleUnit() },
+                    label = { Text("inches") }
+                )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             val density = LocalDensity.current
             val primary = MaterialTheme.colorScheme.primary
@@ -50,9 +69,8 @@ fun RulerScreen(
 
             Canvas(
                 modifier = Modifier
-                    .width(80.dp)
+                    .width(120.dp)
                     .fillMaxHeight()
-                    .padding(start = 16.dp)
             ) {
                 val ydpi = density.density * 160f
                 val pxPerCm = ydpi / 2.54f
@@ -69,8 +87,16 @@ fun RulerScreen(
                         }
                         drawLine(primary, Offset(0f, y), Offset(tickLen, y), strokeWidth = 1.5f)
                         if (mm % 10 == 0) {
-                            val label = (mm / 10).toString()
-                            val result = textMeasurer.measure(label, TextStyle(fontSize = 12.sp, color = onSurface))
+                            val cm = mm / 10
+                            val label = "$cm cm"
+                            val result = textMeasurer.measure(
+                                label,
+                                TextStyle(
+                                    fontSize = 12.sp,
+                                    color = onSurface,
+                                    fontWeight = if (cm == 0) FontWeight.Bold else FontWeight.Normal
+                                )
+                            )
                             drawText(result, topLeft = Offset(tickLen + 4.dp.toPx(), y - result.size.height / 2f))
                         }
                     }
@@ -86,8 +112,16 @@ fun RulerScreen(
                         }
                         drawLine(primary, Offset(0f, y), Offset(tickLen, y), strokeWidth = 1.5f)
                         if (eighth % 8 == 0) {
-                            val label = (eighth / 8).toString()
-                            val result = textMeasurer.measure(label, TextStyle(fontSize = 12.sp, color = onSurface))
+                            val inches = eighth / 8
+                            val label = if (inches == 0) "0 in" else "$inches in"
+                            val result = textMeasurer.measure(
+                                label,
+                                TextStyle(
+                                    fontSize = 12.sp,
+                                    color = onSurface,
+                                    fontWeight = if (inches == 0) FontWeight.Bold else FontWeight.Normal
+                                )
+                            )
                             drawText(result, topLeft = Offset(tickLen + 4.dp.toPx(), y - result.size.height / 2f))
                         }
                     }
