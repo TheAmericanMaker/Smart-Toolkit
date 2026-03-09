@@ -21,12 +21,9 @@ data class BubbleLevelUiState(
     val pitch: Float = 0f,
     val roll: Float = 0f,
     val isLevel: Boolean = false,
-    // Side bubble (phone on its left/right edge, landscape)
+    // Side bubble (phone on its left/right edge)
     val sideAngle: Float = 0f,
     val isSideLevel: Boolean = false,
-    // Bottom bubble (phone standing upright on its bottom edge)
-    val bottomAngle: Float = 0f,
-    val isBottomLevel: Boolean = false,
     val isCalibrated: Boolean = false,
     val isAvailable: Boolean = true
 )
@@ -48,13 +45,11 @@ class BubbleLevelViewModel @Inject constructor(
     private var pitchOffset = 0f
     private var rollOffset = 0f
     private var sideOffset = 0f
-    private var bottomOffset = 0f
 
     // Raw (pre-calibration) values, stored for calibration capture
     private var rawPitch = 0f
     private var rawRoll = 0f
     private var rawSide = 0f
-    private var rawBottom = 0f
 
     init {
         if (accelerometer == null) {
@@ -68,7 +63,6 @@ class BubbleLevelViewModel @Inject constructor(
         pitchOffset = rawPitch
         rollOffset = rawRoll
         sideOffset = rawSide
-        bottomOffset = rawBottom
         // Force an immediate UI update with zeroed values
         _uiState.value = _uiState.value.copy(
             pitch = 0f,
@@ -76,8 +70,6 @@ class BubbleLevelViewModel @Inject constructor(
             isLevel = true,
             sideAngle = 0f,
             isSideLevel = true,
-            bottomAngle = 0f,
-            isBottomLevel = true,
             isCalibrated = true
         )
     }
@@ -103,11 +95,6 @@ class BubbleLevelViewModel @Inject constructor(
         rawSide = Math.toDegrees(atan2(z.toDouble(), y.toDouble())).toFloat()
         val sideAngle = rawSide - sideOffset
 
-        // --- Bottom (phone standing upright on bottom edge) ---
-        // Measures left/right tilt when phone is upright
-        rawBottom = Math.toDegrees(atan2(x.toDouble(), y.toDouble())).toFloat()
-        val bottomAngle = rawBottom - bottomOffset
-
         val threshold = 1.5f
 
         _uiState.value = BubbleLevelUiState(
@@ -116,8 +103,6 @@ class BubbleLevelViewModel @Inject constructor(
             isLevel = abs(pitch) < threshold && abs(roll) < threshold,
             sideAngle = sideAngle,
             isSideLevel = abs(sideAngle) < threshold,
-            bottomAngle = bottomAngle,
-            isBottomLevel = abs(bottomAngle) < threshold,
             isCalibrated = _uiState.value.isCalibrated
         )
     }

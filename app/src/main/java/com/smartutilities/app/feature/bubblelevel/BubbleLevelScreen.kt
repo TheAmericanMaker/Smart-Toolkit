@@ -134,27 +134,6 @@ fun BubbleLevelScreen(
                     label = "Tilt: %.1f\u00B0".format(state.sideAngle)
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // --- Bottom bubble (phone standing upright) ---
-                Text("Upright", style = MaterialTheme.typography.titleSmall)
-                Text(
-                    "Phone standing on its bottom edge",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                TubeBubble(
-                    angle = state.bottomAngle,
-                    isLevel = state.isBottomLevel,
-                    outlineColor = MaterialTheme.colorScheme.outline,
-                    primaryColor = MaterialTheme.colorScheme.primary
-                )
-                LevelStatusText(
-                    isLevel = state.isBottomLevel,
-                    label = "Tilt: %.1f\u00B0".format(state.bottomAngle)
-                )
-
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
