@@ -7,11 +7,20 @@ plugins {
 }
 
 android {
-    namespace = "com.smartutilities.app"
+    namespace = "com.smarttoolkit.app"
     compileSdk = 35
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = rootProject.file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     defaultConfig {
-        applicationId = "com.smartutilities.app"
+        applicationId = "com.smarttoolkit.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -37,6 +46,13 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+
+    applicationVariants.all {
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            output.outputFileName = "smart-toolkit-${buildType.name}.apk"
+        }
     }
 }
 

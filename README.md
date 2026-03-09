@@ -60,7 +60,7 @@ Provided by **Mid Michigan MFG, LLC** — [midmichiganmfg.com](https://midmichig
 ./gradlew assembleDebug
 ```
 
-The APK will be at `app/build/outputs/apk/debug/app-debug.apk`.
+The APK will be at `app/build/outputs/apk/debug/smart-toolkit-debug.apk`.
 
 ### Build Release APK
 
@@ -77,9 +77,9 @@ This project uses GitHub Actions to automatically build a debug APK on every pus
 ## Project Structure
 
 ```
-app/src/main/java/com/smartutilities/app/
+app/src/main/java/com/smarttoolkit/app/
 ├── MainActivity.kt              # Single activity entry point
-├── SmartUtilitiesApp.kt         # Hilt application class
+├── SmartToolkitApp.kt           # Hilt application class
 ├── navigation/                  # Route definitions and NavHost
 ├── ui/
 │   ├── theme/                   # Material 3 theme, colors, typography

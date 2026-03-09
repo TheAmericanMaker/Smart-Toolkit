@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Smart Utilities ("we", "our", or "the app") is committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and your choices.
+Smart Toolkit ("we", "our", or "the app") is committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and your choices.
 
 ## Information We Collect
 
@@ -45,12 +45,12 @@ All app data is stored locally on your device. Uninstalling the app removes all 
 
 ## Children's Privacy
 
-Smart Utilities does not knowingly collect personal information from children under 13. The app displays ads that comply with Google's ad policies.
+Smart Toolkit does not knowingly collect personal information from children under 13. The app displays ads that comply with Google's ad policies.
 
 ## Your Choices
 
 - **Disable personalized ads:** Go to your device's Google settings to opt out of ad personalization.
-- **Revoke permissions:** You can revoke any permission at any time through your device's Settings > Apps > Smart Utilities > Permissions.
+- **Revoke permissions:** You can revoke any permission at any time through your device's Settings > Apps > Smart Toolkit > Permissions.
 - **Delete data:** Uninstall the app or clear app data from device settings.
 
 ## Changes to This Policy

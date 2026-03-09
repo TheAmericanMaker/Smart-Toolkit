@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Smart-Utilities"
+rootProject.name = "Smart-Toolkit"
 include(":app")
