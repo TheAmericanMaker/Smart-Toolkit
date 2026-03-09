@@ -1,6 +1,8 @@
-# Smart Utilities
+# Smart Toolkit
 
-A collection of 16 handy everyday tools in one Android app. Built with Jetpack Compose and Material 3.
+A collection of 21 handy everyday tools in one Android app. Built with Jetpack Compose and Material 3.
+
+Provided by **Mid Michigan MFG, LLC** — [midmichiganmfg.com](https://midmichiganmfg.com)
 
 ## Features
 
@@ -14,7 +16,7 @@ A collection of 16 handy everyday tools in one Android app. Built with Jetpack C
 | Compass | Digital compass with animated compass rose |
 | Network | Connection type, IP address, WiFi signal info |
 | Storage | Internal/external storage usage analyzer |
-| Ruler | On-screen ruler (cm and inches) |
+| Ruler | On-screen ruler with labeled cm/mm and inch markings |
 | QR Scanner | Scan QR codes and barcodes using CameraX + ML Kit |
 | Unit Converter | Convert between units across 7 categories |
 | Text Tools | Character/word/sentence counts, case transforms, clipboard |
@@ -22,6 +24,11 @@ A collection of 16 handy everyday tools in one Android app. Built with Jetpack C
 | Notepad | Simple note-taking with local Room database |
 | Device Info | Model, CPU, RAM, screen specs, Android version |
 | Sound Meter | Approximate ambient sound level measurement |
+| Bubble Level | Surface and side level with user calibration zeroing |
+| Tip Calculator | Bill splitting with customizable tip percentages |
+| Tally Counter | Persistent tap counter with haptic feedback |
+| Magnifier | Camera-based magnifying glass with zoom and torch |
+| Color Picker | Live camera color sampling with HEX, RGB, and HSL output |
 
 ## Screenshots
 
@@ -34,8 +41,9 @@ A collection of 16 handy everyday tools in one Android app. Built with Jetpack C
 - **Architecture:** MVVM with StateFlow
 - **DI:** Hilt
 - **Navigation:** Navigation Compose
-- **Local Storage:** Room (notes), DataStore Preferences (settings/favorites)
+- **Local Storage:** Room (notes), DataStore Preferences (settings/favorites), SharedPreferences (tally counter)
 - **Camera:** CameraX + ML Kit Barcode Scanning
+- **Sensors:** Accelerometer (compass, bubble level), microphone (sound meter)
 - **Min SDK:** 26 (Android 8.0)
 - **Target SDK:** 34 (Android 14)
 
@@ -94,7 +102,12 @@ app/src/main/java/com/smartutilities/app/
 │   ├── randomgenerator/
 │   ├── notepad/
 │   ├── deviceinfo/
-│   └── soundmeter/
+│   ├── soundmeter/
+│   ├── bubblelevel/
+│   ├── tipcalculator/
+│   ├── tallycounter/
+│   ├── magnifyingglass/
+│   └── colorpicker/
 ├── data/                        # Room database, DataStore, models
 └── di/                          # Hilt modules
 ```
