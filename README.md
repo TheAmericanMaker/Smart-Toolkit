@@ -77,7 +77,7 @@ This project uses GitHub Actions to automatically build a debug APK on every pus
 ## Project Structure
 
 ```
-app/src/main/java/com/smartutilities/app/
+app/src/main/java/com/smarttoolkit/app/
 ├── MainActivity.kt              # Single activity entry point
 ├── SmartToolkitApp.kt           # Hilt application class
 ├── navigation/                  # Route definitions and NavHost

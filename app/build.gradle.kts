@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.smartutilities.app"
+    namespace = "com.smarttoolkit.app"
     compileSdk = 35
 
     signingConfigs {
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.smartutilities.app"
+        applicationId = "com.smarttoolkit.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
