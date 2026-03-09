@@ -7,6 +7,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.smartutilities.app.feature.battery.BatteryScreen
+import com.smartutilities.app.feature.bubblelevel.BubbleLevelScreen
+import com.smartutilities.app.feature.colorpicker.ColorPickerScreen
+import com.smartutilities.app.feature.magnifyingglass.MagnifyingGlassScreen
+import com.smartutilities.app.feature.tallycounter.TallyCounterScreen
+import com.smartutilities.app.feature.tipcalculator.TipCalculatorScreen
 import com.smartutilities.app.feature.calculator.CalculatorScreen
 import com.smartutilities.app.feature.compass.CompassScreen
 import com.smartutilities.app.feature.deviceinfo.DeviceInfoScreen
@@ -95,6 +100,21 @@ fun NavGraph(navController: NavHostController) {
         }
         composable(Screen.SoundMeter.route) {
             SoundMeterScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.BubbleLevel.route) {
+            BubbleLevelScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.TipCalculator.route) {
+            TipCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.TallyCounter.route) {
+            TallyCounterScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.MagnifyingGlass.route) {
+            MagnifyingGlassScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.ColorPicker.route) {
+            ColorPickerScreen(onBack = { navController.popBackStack() })
         }
     }
 }

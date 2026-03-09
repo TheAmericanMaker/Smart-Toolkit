@@ -23,4 +23,9 @@ sealed class Screen(val route: String) {
     }
     data object DeviceInfo : Screen("deviceinfo")
     data object SoundMeter : Screen("soundmeter")
+    data object BubbleLevel : Screen("bubblelevel")
+    data object TipCalculator : Screen("tipcalculator")
+    data object TallyCounter : Screen("tallycounter")
+    data object MagnifyingGlass : Screen("magnifyingglass")
+    data object ColorPicker : Screen("colorpicker")
 }

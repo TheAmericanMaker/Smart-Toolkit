@@ -4,7 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringSetPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -16,13 +16,15 @@ class UserPreferencesRepository @Inject constructor(
 ) {
     private companion object {
         val DARK_MODE = booleanPreferencesKey("dark_mode")
-        val FAVORITES = stringSetPreferencesKey("favorites")
+        val FAVORITE_ORDER = stringPreferencesKey("favorite_order")
         val USE_SYSTEM_THEME = booleanPreferencesKey("use_system_theme")
     }
 
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
     val useSystemTheme: Flow<Boolean> = dataStore.data.map { it[USE_SYSTEM_THEME] ?: true }
-    val favorites: Flow<Set<String>> = dataStore.data.map { it[FAVORITES] ?: emptySet() }
+    val favorites: Flow<List<String>> = dataStore.data.map { prefs ->
+        prefs[FAVORITE_ORDER]?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+    }
 
     suspend fun setDarkMode(enabled: Boolean) {
         dataStore.edit { it[DARK_MODE] = enabled }
@@ -34,8 +36,23 @@ class UserPreferencesRepository @Inject constructor(
 
     suspend fun toggleFavorite(utilityId: String) {
         dataStore.edit { prefs ->
-            val current = prefs[FAVORITES] ?: emptySet()
-            prefs[FAVORITES] = if (utilityId in current) current - utilityId else current + utilityId
+            val current = prefs[FAVORITE_ORDER]?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+            prefs[FAVORITE_ORDER] = if (utilityId in current) {
+                (current - utilityId).joinToString(",")
+            } else {
+                (current + utilityId).joinToString(",")
+            }
+        }
+    }
+
+    suspend fun reorderFavorite(fromIndex: Int, toIndex: Int) {
+        dataStore.edit { prefs ->
+            val current = prefs[FAVORITE_ORDER]?.split(",")?.filter { it.isNotEmpty() }?.toMutableList() ?: return@edit
+            if (fromIndex in current.indices && toIndex in current.indices) {
+                val item = current.removeAt(fromIndex)
+                current.add(toIndex, item)
+                prefs[FAVORITE_ORDER] = current.joinToString(",")
+            }
         }
     }
 }
