@@ -73,7 +73,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
             Text("About", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Smart Utilities v1.0.0", style = MaterialTheme.typography.bodyLarge)
+            Text("Smart Toolkit v1.0.0", style = MaterialTheme.typography.bodyLarge)
             Text(
                 "A collection of handy everyday tools.",
                 style = MaterialTheme.typography.bodySmall,
