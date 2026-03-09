@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val utilities: List<UtilityItem> = allUtilities,
-    val favorites: Set<String> = emptySet(),
+    val favorites: List<String> = emptyList(),
     val searchQuery: String = ""
 ) {
     val filteredUtilities: List<UtilityItem>
@@ -24,7 +24,10 @@ data class HomeUiState(
         else utilities.filter { it.name.contains(searchQuery, ignoreCase = true) }
 
     val favoriteUtilities: List<UtilityItem>
-        get() = utilities.filter { it.id in favorites }
+        get() {
+            val utilityMap = utilities.associateBy { it.id }
+            return favorites.mapNotNull { utilityMap[it] }
+        }
 }
 
 @HiltViewModel
@@ -52,6 +55,12 @@ class HomeViewModel @Inject constructor(
     fun toggleFavorite(utilityId: String) {
         viewModelScope.launch {
             preferencesRepository.toggleFavorite(utilityId)
+        }
+    }
+
+    fun reorderFavorite(fromIndex: Int, toIndex: Int) {
+        viewModelScope.launch {
+            preferencesRepository.reorderFavorite(fromIndex, toIndex)
         }
     }
 }
