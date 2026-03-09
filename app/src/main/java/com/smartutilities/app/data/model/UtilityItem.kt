@@ -49,8 +49,7 @@ val allUtilities = listOf(
     UtilityItem("notepad", "Notepad", Icons.Filled.EditNote, "notepad", "Simple note-taking"),
     UtilityItem("deviceinfo", "Device Info", Icons.Filled.DeviceHub, "deviceinfo", "Device information"),
     UtilityItem("soundmeter", "Sound Meter", Icons.Filled.GraphicEq, "soundmeter", "Measure ambient sound"),
-    // Bubble Level hidden until calibration/reference feature is implemented
-    // UtilityItem("bubblelevel", "Bubble Level", Icons.Filled.Balance, "bubblelevel", "Check surface level"),
+    UtilityItem("bubblelevel", "Bubble Level", Icons.Filled.Balance, "bubblelevel", "Check surface level"),
     UtilityItem("tipcalculator", "Tip Calculator", Icons.Filled.Receipt, "tipcalculator", "Split bills & tips"),
     UtilityItem("tallycounter", "Tally Counter", Icons.Filled.PlusOne, "tallycounter", "Simple tap counter"),
     UtilityItem("magnifyingglass", "Magnifier", Icons.Filled.ZoomIn, "magnifyingglass", "Camera magnifier"),

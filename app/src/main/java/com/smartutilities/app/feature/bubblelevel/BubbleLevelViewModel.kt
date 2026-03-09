@@ -14,11 +14,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.sqrt
 
 data class BubbleLevelUiState(
+    // Surface bubble (phone on its back)
     val pitch: Float = 0f,
     val roll: Float = 0f,
     val isLevel: Boolean = false,
+    // Side bubble (phone on its left/right edge, landscape)
+    val sideAngle: Float = 0f,
+    val isSideLevel: Boolean = false,
+    // Bottom bubble (phone standing upright on its bottom edge)
+    val bottomAngle: Float = 0f,
+    val isBottomLevel: Boolean = false,
+    val isCalibrated: Boolean = false,
     val isAvailable: Boolean = true
 )
 
@@ -35,12 +44,42 @@ class BubbleLevelViewModel @Inject constructor(
 
     private var gravity: FloatArray? = null
 
+    // Calibration offsets — subtracted from raw readings to zero out
+    private var pitchOffset = 0f
+    private var rollOffset = 0f
+    private var sideOffset = 0f
+    private var bottomOffset = 0f
+
+    // Raw (pre-calibration) values, stored for calibration capture
+    private var rawPitch = 0f
+    private var rawRoll = 0f
+    private var rawSide = 0f
+    private var rawBottom = 0f
+
     init {
         if (accelerometer == null) {
             _uiState.value = BubbleLevelUiState(isAvailable = false)
         } else {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
         }
+    }
+
+    fun calibrate() {
+        pitchOffset = rawPitch
+        rollOffset = rawRoll
+        sideOffset = rawSide
+        bottomOffset = rawBottom
+        // Force an immediate UI update with zeroed values
+        _uiState.value = _uiState.value.copy(
+            pitch = 0f,
+            roll = 0f,
+            isLevel = true,
+            sideAngle = 0f,
+            isSideLevel = true,
+            bottomAngle = 0f,
+            isBottomLevel = true,
+            isCalibrated = true
+        )
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -52,14 +91,34 @@ class BubbleLevelViewModel @Inject constructor(
         val y = g[1]
         val z = g[2]
 
-        val pitch = Math.toDegrees(atan2(y.toDouble(), z.toDouble())).toFloat() - 90f
-        val roll = Math.toDegrees(atan2(x.toDouble(), z.toDouble())).toFloat()
-        val isLevel = abs(pitch) < 1.5f && abs(roll) < 1.5f
+        // --- Surface (phone flat on back) ---
+        // pitch: tilt forward/back, roll: tilt left/right
+        rawPitch = Math.toDegrees(atan2(y.toDouble(), z.toDouble())).toFloat() - 90f
+        rawRoll = Math.toDegrees(atan2(x.toDouble(), z.toDouble())).toFloat()
+        val pitch = rawPitch - pitchOffset
+        val roll = rawRoll - rollOffset
+
+        // --- Side (phone on its left or right edge, landscape) ---
+        // Measures tilt around the long axis when phone is on its side
+        rawSide = Math.toDegrees(atan2(z.toDouble(), y.toDouble())).toFloat()
+        val sideAngle = rawSide - sideOffset
+
+        // --- Bottom (phone standing upright on bottom edge) ---
+        // Measures left/right tilt when phone is upright
+        rawBottom = Math.toDegrees(atan2(x.toDouble(), y.toDouble())).toFloat()
+        val bottomAngle = rawBottom - bottomOffset
+
+        val threshold = 1.5f
 
         _uiState.value = BubbleLevelUiState(
             pitch = pitch,
             roll = roll,
-            isLevel = isLevel
+            isLevel = abs(pitch) < threshold && abs(roll) < threshold,
+            sideAngle = sideAngle,
+            isSideLevel = abs(sideAngle) < threshold,
+            bottomAngle = bottomAngle,
+            isBottomLevel = abs(bottomAngle) < threshold,
+            isCalibrated = _uiState.value.isCalibrated
         )
     }
 
