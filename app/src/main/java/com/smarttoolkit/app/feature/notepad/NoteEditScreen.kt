@@ -1,29 +1,63 @@
 package com.smarttoolkit.app.feature.notepad
 
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttoolkit.app.data.model.NoteType
+import com.smarttoolkit.app.feature.notepad.components.ChecklistItemRow
+import com.smarttoolkit.app.feature.notepad.components.FullScreenImageViewer
+import com.smarttoolkit.app.feature.notepad.components.ImageAttachmentRow
+import com.smarttoolkit.app.feature.notepad.smart.ChecklistSuggestionProvider
+import com.smarttoolkit.app.feature.notepad.templates.TemplatePickerBottomSheet
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NoteEditScreen(
     onBack: () -> Unit,
@@ -32,39 +66,101 @@ fun NoteEditScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    var showTemplates by rememberSaveable { mutableStateOf(false) }
+    var viewingImageIndex by remember { mutableIntStateOf(-1) }
+
+    val focusRequesters = remember(state.checklistItems.size) {
+        List(state.checklistItems.size) { FocusRequester() }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.focusItemIndex.collect { index ->
+            if (index in focusRequesters.indices) {
+                try {
+                    focusRequesters[index].requestFocus()
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.addImageFromUri(it) }
+    }
+
     BackHandler {
         viewModel.save()
         onBack()
     }
 
+    // Template picker
+    if (showTemplates) {
+        TemplatePickerBottomSheet(
+            onDismiss = { showTemplates = false },
+            onTemplateSelected = { template ->
+                viewModel.applyTemplate(template.title, template.type, template.items)
+                showTemplates = false
+            }
+        )
+    }
+
+    // Full-screen image viewer
+    if (viewingImageIndex >= 0 && viewingImageIndex < state.images.size) {
+        val img = state.images[viewingImageIndex]
+        val file = viewModel.getImageFile(img.filePath)
+        if (file.exists()) {
+            FullScreenImageViewer(
+                imageFile = file,
+                onDismiss = { viewingImageIndex = -1 }
+            )
+        }
+    }
+
+    val title = when {
+        state.isNew && state.type == NoteType.CHECKLIST -> "New Checklist"
+        state.isNew -> "New Note"
+        state.type == NoteType.CHECKLIST -> "Edit Checklist"
+        else -> "Edit Note"
+    }
+
     Scaffold(
         topBar = {
             UtilityTopBar(
-                title = if (state.isNew) "New Note" else "Edit Note",
+                title = title,
                 onBack = {
                     viewModel.save()
                     onBack()
                 },
                 actions = {
+                    // Type toggle
+                    IconButton(onClick = { viewModel.onToggleType() }) {
+                        Icon(
+                            imageVector = if (state.type == NoteType.TEXT) Icons.Filled.Checklist else Icons.Filled.Notes,
+                            contentDescription = if (state.type == NoteType.TEXT) "Switch to checklist" else "Switch to note"
+                        )
+                    }
+                    // Share
                     IconButton(
                         onClick = {
-                            val text = buildString {
-                                if (state.title.isNotBlank()) {
-                                    appendLine(state.title)
-                                    appendLine()
-                                }
-                                append(state.content)
-                            }
+                            val text = NoteShareFormatter.formatForSharing(
+                                state.title, state.content, state.type, state.checklistItems
+                            )
+                            val html = NoteShareFormatter.formatAsHtml(
+                                state.title, state.content, state.type, state.checklistItems
+                            )
                             val intent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_SUBJECT, state.title)
                                 putExtra(Intent.EXTRA_TEXT, text)
+                                putExtra(Intent.EXTRA_HTML_TEXT, html)
                             }
-                            context.startActivity(Intent.createChooser(intent, "Share note"))
+                            context.startActivity(Intent.createChooser(intent, "Share"))
                         },
-                        enabled = state.title.isNotBlank() || state.content.isNotBlank()
+                        enabled = state.title.isNotBlank() || state.content.isNotBlank() ||
+                            state.checklistItems.any { it.text.isNotBlank() }
                     ) {
-                        Icon(Icons.Filled.Share, contentDescription = "Share note")
+                        Icon(Icons.Filled.Share, contentDescription = "Share")
                     }
                 }
             )
@@ -74,8 +170,22 @@ fun NoteEditScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
+            // Template button for new notes
+            AnimatedVisibility(
+                visible = state.isNew && state.title.isBlank() && state.content.isBlank() &&
+                    state.checklistItems.all { it.text.isBlank() }
+            ) {
+                TextButton(
+                    onClick = { showTemplates = true },
+                    modifier = Modifier.padding(bottom = 4.dp)
+                ) {
+                    Text("Use a template")
+                }
+            }
+
+            // Title
             OutlinedTextField(
                 value = state.title,
                 onValueChange = viewModel::onTitleChange,
@@ -83,13 +193,161 @@ fun NoteEditScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
+
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = state.content,
-                onValueChange = viewModel::onContentChange,
-                label = { Text("Content") },
-                modifier = Modifier.fillMaxWidth().weight(1f)
-            )
+
+            // Image attachments
+            if (state.images.isNotEmpty() || state.type != NoteType.TEXT) {
+                ImageAttachmentRow(
+                    images = state.images,
+                    getImageFile = { viewModel.getImageFile(it) },
+                    onAddImage = {
+                        imagePickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onRemoveImage = { viewModel.removeImage(it) },
+                    onImageClick = { viewingImageIndex = it }
+                )
+            }
+
+            when (state.type) {
+                NoteType.TEXT -> {
+                    // Add image button for text notes
+                    if (state.images.isEmpty()) {
+                        TextButton(
+                            onClick = {
+                                imagePickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            }
+                        ) {
+                            Text("Attach image")
+                        }
+                    }
+                    OutlinedTextField(
+                        value = state.content,
+                        onValueChange = viewModel::onContentChange,
+                        label = { Text("Content") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                }
+
+                NoteType.CHECKLIST -> {
+                    // Suggestions
+                    val suggestions = remember(state.title) {
+                        ChecklistSuggestionProvider.getSuggestions(state.title)
+                    }
+                    val addedTexts = remember(state.checklistItems) {
+                        state.checklistItems.map { it.text.lowercase() }.toSet()
+                    }
+                    val filteredSuggestions = suggestions.filter { it.lowercase() !in addedTexts }
+
+                    AnimatedVisibility(visible = filteredSuggestions.isNotEmpty()) {
+                        Column {
+                            Text(
+                                "Suggestions",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                            FlowRow(
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            ) {
+                                filteredSuggestions.take(8).forEach { suggestion ->
+                                    AssistChip(
+                                        onClick = { viewModel.addSuggestedItem(suggestion) },
+                                        label = { Text(suggestion, style = MaterialTheme.typography.labelSmall) },
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                    // Checklist items
+                    val uncheckedItems = state.checklistItems.withIndex().filter { !it.value.isChecked }
+                    val checkedItems = state.checklistItems.withIndex().filter { it.value.isChecked }
+
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        // Unchecked items first
+                        itemsIndexed(
+                            uncheckedItems,
+                            key = { _, indexed -> indexed.value.tempId }
+                        ) { _, indexed ->
+                            val actualIndex = indexed.index
+                            ChecklistItemRow(
+                                text = indexed.value.text,
+                                isChecked = false,
+                                onTextChange = { viewModel.onChecklistItemTextChange(actualIndex, it) },
+                                onCheckedChange = { viewModel.onChecklistItemCheckedChange(actualIndex, it) },
+                                onEnterPressed = { viewModel.onAddChecklistItem(actualIndex) },
+                                onDelete = { viewModel.onDeleteChecklistItem(actualIndex) },
+                                canDelete = state.checklistItems.size > 1,
+                                focusRequester = if (actualIndex < focusRequesters.size) focusRequesters[actualIndex] else FocusRequester()
+                            )
+                        }
+
+                        // Add item button
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 24.dp, top = 4.dp, bottom = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(onClick = { viewModel.onAddChecklistItem() }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Add,
+                                        contentDescription = "Add item",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Text(
+                                    "Add item",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        // Checked items section
+                        if (checkedItems.isNotEmpty()) {
+                            item {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                Text(
+                                    "${checkedItems.size} checked item${if (checkedItems.size > 1) "s" else ""}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
+                                )
+                            }
+                            itemsIndexed(
+                                checkedItems,
+                                key = { _, indexed -> indexed.value.tempId }
+                            ) { _, indexed ->
+                                val actualIndex = indexed.index
+                                ChecklistItemRow(
+                                    text = indexed.value.text,
+                                    isChecked = true,
+                                    onTextChange = { viewModel.onChecklistItemTextChange(actualIndex, it) },
+                                    onCheckedChange = { viewModel.onChecklistItemCheckedChange(actualIndex, it) },
+                                    onEnterPressed = {},
+                                    onDelete = { viewModel.onDeleteChecklistItem(actualIndex) },
+                                    canDelete = state.checklistItems.size > 1,
+                                    focusRequester = if (actualIndex < focusRequesters.size) focusRequesters[actualIndex] else FocusRequester()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
