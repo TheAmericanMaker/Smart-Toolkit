@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +63,21 @@ fun ImageAttachmentRow(
                         )
                     }
                 }
+                // OCR badge
+                Icon(
+                    imageVector = Icons.Filled.DocumentScanner,
+                    contentDescription = "Tap to extract text",
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(4.dp)
+                        .size(16.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            CircleShape
+                        ),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                // Remove button
                 IconButton(
                     onClick = { onRemoveImage(index) },
                     modifier = Modifier

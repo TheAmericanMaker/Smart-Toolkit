@@ -18,12 +18,19 @@ class UserPreferencesRepository @Inject constructor(
         val DARK_MODE = booleanPreferencesKey("dark_mode")
         val FAVORITE_ORDER = stringPreferencesKey("favorite_order")
         val USE_SYSTEM_THEME = booleanPreferencesKey("use_system_theme")
+        val OCR_HINT_SHOWN = booleanPreferencesKey("ocr_hint_shown")
     }
 
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
     val useSystemTheme: Flow<Boolean> = dataStore.data.map { it[USE_SYSTEM_THEME] ?: true }
     val favorites: Flow<List<String>> = dataStore.data.map { prefs ->
         prefs[FAVORITE_ORDER]?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+    }
+
+    val ocrHintShown: Flow<Boolean> = dataStore.data.map { it[OCR_HINT_SHOWN] ?: false }
+
+    suspend fun setOcrHintShown() {
+        dataStore.edit { it[OCR_HINT_SHOWN] = true }
     }
 
     suspend fun setDarkMode(enabled: Boolean) {

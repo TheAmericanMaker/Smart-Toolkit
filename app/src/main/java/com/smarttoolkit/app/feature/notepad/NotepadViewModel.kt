@@ -11,6 +11,7 @@ import com.smarttoolkit.app.data.model.ChecklistItem
 import com.smarttoolkit.app.data.model.Note
 import com.smarttoolkit.app.data.model.NoteImage
 import com.smarttoolkit.app.data.model.NoteType
+import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import com.smarttoolkit.app.data.repository.NoteRepository
 import com.smarttoolkit.app.feature.notepad.smart.NoteCategorizer
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,9 +20,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -57,6 +60,7 @@ data class NoteEditUiState(
 class NotepadViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: NoteRepository,
+    private val preferencesRepository: UserPreferencesRepository,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
@@ -68,6 +72,15 @@ class NotepadViewModel @Inject constructor(
 
     private val _focusItemIndex = MutableSharedFlow<Int>()
     val focusItemIndex = _focusItemIndex.asSharedFlow()
+
+    val showOcrHint: StateFlow<Boolean> = preferencesRepository.ocrHintShown
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun dismissOcrHint() {
+        viewModelScope.launch {
+            preferencesRepository.setOcrHintShown()
+        }
+    }
 
     private var savedNoteId: Long = noteId
     private var autoSaveJob: Job? = null

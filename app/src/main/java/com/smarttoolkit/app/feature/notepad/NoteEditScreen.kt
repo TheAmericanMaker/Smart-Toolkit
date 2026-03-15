@@ -32,6 +32,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -64,10 +66,22 @@ fun NoteEditScreen(
     viewModel: NotepadViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val ocrHintShown by viewModel.showOcrHint.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var showTemplates by rememberSaveable { mutableStateOf(false) }
     var viewingImageIndex by remember { mutableIntStateOf(-1) }
+
+    // Show OCR hint when images are first added
+    LaunchedEffect(state.images.size, ocrHintShown) {
+        if (state.images.isNotEmpty() && !ocrHintShown) {
+            snackbarHostState.showSnackbar(
+                message = "Tip: Tap an image to extract text from it",
+            )
+            viewModel.dismissOcrHint()
+        }
+    }
 
     val focusRequesters = remember(state.checklistItems.size) {
         List(state.checklistItems.size) { FocusRequester() }
@@ -126,6 +140,7 @@ fun NoteEditScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             UtilityTopBar(
                 title = title,
