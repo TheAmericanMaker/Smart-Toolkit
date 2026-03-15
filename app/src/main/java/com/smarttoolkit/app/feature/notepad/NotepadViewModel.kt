@@ -281,6 +281,25 @@ class NotepadViewModel @Inject constructor(
         scheduleAutoSave()
     }
 
+    fun onDictatedText(text: String) {
+        val state = _uiState.value
+        if (state.type == NoteType.CHECKLIST) {
+            val lines = text.split(Regex("[.\\n]"))
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+            val items = state.checklistItems.toMutableList()
+            val insertAt = items.indexOfLast { it.text.isBlank() }.takeIf { it >= 0 } ?: items.size
+            lines.forEach { line ->
+                items.add(insertAt, ChecklistItemUiState(text = line))
+            }
+            _uiState.value = state.copy(checklistItems = items)
+        } else {
+            val separator = if (state.content.isNotBlank()) " " else ""
+            _uiState.value = state.copy(content = state.content + separator + text)
+        }
+        scheduleAutoSave()
+    }
+
     fun addSuggestedItem(text: String) {
         val items = _uiState.value.checklistItems.toMutableList()
         val lastEmpty = items.indexOfLast { it.text.isBlank() }

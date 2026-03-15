@@ -1,7 +1,9 @@
 package com.smarttoolkit.app.feature.notepad
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.speech.RecognizerIntent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -23,6 +25,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AssistChip
@@ -101,6 +104,25 @@ fun NoteEditScreen(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         uri?.let { viewModel.addImageFromUri(it) }
+    }
+
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val text = result.data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            text?.let { viewModel.onDictatedText(it) }
+        }
+    }
+
+    val launchDictation = {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your note...")
+        }
+        speechLauncher.launch(intent)
     }
 
     BackHandler {
@@ -245,6 +267,15 @@ fun NoteEditScreen(
                         value = state.content,
                         onValueChange = viewModel::onContentChange,
                         label = { Text("Content") },
+                        trailingIcon = {
+                            IconButton(onClick = { launchDictation() }) {
+                                Icon(
+                                    Icons.Filled.Mic,
+                                    contentDescription = "Voice input",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
@@ -330,6 +361,14 @@ fun NoteEditScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                Spacer(modifier = Modifier.weight(1f))
+                                IconButton(onClick = { launchDictation() }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Mic,
+                                        contentDescription = "Voice input",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             }
                         }
 
