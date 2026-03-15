@@ -10,7 +10,7 @@ Provided by **The American Maker & Claude Code** — [midmichiganmfg.com](https:
 |---------|-------------|
 | Flashlight | Toggle flashlight with Steady, SOS (morse code), and Strobe modes |
 | Stopwatch | Precision stopwatch with lap tracking, swipe-to-delete laps, haptic feedback |
-| Timer | Countdown timer with quick presets (1m–30m), persisted duration, haptic feedback |
+| Timer | Countdown timer with quick presets (1m–30m), background foreground service, notification controls (pause/resume/cancel/dismiss from tray), selectable alarm sounds |
 | Calculator | Expression-based calculator with history panel, tap to reuse results, haptic feedback |
 | Battery | Real-time battery stats with color-coded arc gauge, tap to toggle °C/°F |
 | Compass | Digital compass with accuracy indicator, lock bearing marker, cardinal labels |
@@ -30,6 +30,10 @@ Provided by **The American Maker & Claude Code** — [midmichiganmfg.com](https:
 | Magnifier | Camera-based magnifier with zoom presets (2x–8x), slider, and torch |
 | Color Picker | Live camera color sampling with HEX/RGB/HSL, save palette (last 20), tap to copy |
 
+## User Guide
+
+A searchable in-app User Guide is available under **Settings > Help > User Guide**. It covers every utility with how-to instructions, tips, and permission explanations. Sections are collapsible and entries expand on tap. The search bar filters by title, content, and tags in real time.
+
 ## Screenshots
 
 *Coming soon*
@@ -43,6 +47,7 @@ Provided by **The American Maker & Claude Code** — [midmichiganmfg.com](https:
 - **Navigation:** Navigation Compose
 - **Local Storage:** Room (notes, history), DataStore Preferences (settings, favorites, utility state)
 - **Camera:** CameraX + ML Kit Barcode Scanning
+- **Background:** Foreground service (timer countdown & alarm notifications)
 - **Sensors:** Accelerometer (compass, bubble level), magnetometer (compass), microphone (sound meter)
 - **Min SDK:** 26 (Android 8.0)
 - **Target SDK:** 34 (Android 14)
@@ -85,6 +90,7 @@ app/src/main/java/com/smarttoolkit/app/
 │   ├── theme/                   # Material 3 theme, colors, typography
 │   ├── home/                    # Dashboard with search and favorites
 │   ├── settings/                # Dark mode and app settings
+│   ├── guide/                   # Searchable in-app User Guide
 │   ├── components/              # Shared UI components (PermissionHandler, UtilityTopBar)
 │   └── util/                    # Haptic feedback utility
 ├── feature/                     # One package per utility
