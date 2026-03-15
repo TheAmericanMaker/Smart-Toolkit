@@ -11,12 +11,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+enum class RoundingMode { NONE, ROUND_TOTAL, ROUND_PER_PERSON }
+
 data class TipCalculatorUiState(
     val billAmount: String = "",
+    val taxAmount: String = "",
     val tipPercentage: Int = 15,
     val customTipText: String = "",
     val isCustomTip: Boolean = false,
     val numberOfPeople: Int = 1,
+    val roundingMode: RoundingMode = RoundingMode.NONE,
     val tipAmount: Double = 0.0,
     val totalAmount: Double = 0.0,
     val perPersonAmount: Double = 0.0
@@ -41,6 +45,18 @@ class TipCalculatorViewModel @Inject constructor(
         val filtered = text.filter { it.isDigit() || it == '.' }
         if (filtered.count { it == '.' } > 1) return
         _uiState.value = _uiState.value.copy(billAmount = filtered)
+        recalculate()
+    }
+
+    fun onTaxAmountChanged(text: String) {
+        val filtered = text.filter { it.isDigit() || it == '.' }
+        if (filtered.count { it == '.' } > 1) return
+        _uiState.value = _uiState.value.copy(taxAmount = filtered)
+        recalculate()
+    }
+
+    fun setRoundingMode(mode: RoundingMode) {
+        _uiState.value = _uiState.value.copy(roundingMode = mode)
         recalculate()
     }
 
@@ -82,9 +98,23 @@ class TipCalculatorViewModel @Inject constructor(
     private fun recalculate() {
         val state = _uiState.value
         val bill = state.billAmount.toDoubleOrNull() ?: 0.0
+        val tax = state.taxAmount.toDoubleOrNull() ?: 0.0
         val tip = bill * state.tipPercentage / 100.0
-        val total = bill + tip
-        val perPerson = if (state.numberOfPeople > 0) total / state.numberOfPeople else total
+        var total = bill + tax + tip
+        var perPerson = if (state.numberOfPeople > 0) total / state.numberOfPeople else total
+
+        when (state.roundingMode) {
+            RoundingMode.ROUND_TOTAL -> {
+                total = kotlin.math.ceil(total)
+                perPerson = if (state.numberOfPeople > 0) total / state.numberOfPeople else total
+            }
+            RoundingMode.ROUND_PER_PERSON -> {
+                perPerson = kotlin.math.ceil(perPerson)
+                total = perPerson * state.numberOfPeople
+            }
+            RoundingMode.NONE -> {}
+        }
+
         _uiState.value = state.copy(
             tipAmount = tip,
             totalAmount = total,

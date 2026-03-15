@@ -19,7 +19,9 @@ data class RandomGeneratorUiState(
     val includeUppercase: Boolean = true,
     val includeLowercase: Boolean = true,
     val includeDigits: Boolean = true,
-    val includeSymbols: Boolean = false
+    val includeSymbols: Boolean = false,
+    val batchCount: String = "1",
+    val history: List<String> = emptyList()
 )
 
 @HiltViewModel
@@ -28,7 +30,8 @@ class RandomGeneratorViewModel @Inject constructor() : ViewModel() {
     private val _uiState = MutableStateFlow(RandomGeneratorUiState())
     val uiState: StateFlow<RandomGeneratorUiState> = _uiState.asStateFlow()
 
-    fun setMode(mode: RandomMode) { _uiState.value = _uiState.value.copy(mode = mode, result = "") }
+    fun setMode(mode: RandomMode) { _uiState.value = _uiState.value.copy(mode = mode, result = "", batchCount = "1") }
+    fun setBatchCount(v: String) { _uiState.value = _uiState.value.copy(batchCount = v.filter { it.isDigit() }) }
     fun setMin(v: String) { _uiState.value = _uiState.value.copy(min = v) }
     fun setMax(v: String) { _uiState.value = _uiState.value.copy(max = v) }
     fun setPasswordLength(v: String) { _uiState.value = _uiState.value.copy(passwordLength = v) }
@@ -37,13 +40,13 @@ class RandomGeneratorViewModel @Inject constructor() : ViewModel() {
     fun toggleDigits() { _uiState.value = _uiState.value.copy(includeDigits = !_uiState.value.includeDigits) }
     fun toggleSymbols() { _uiState.value = _uiState.value.copy(includeSymbols = !_uiState.value.includeSymbols) }
 
-    fun generate() {
+    private fun generateOne(): String {
         val s = _uiState.value
-        val result = when (s.mode) {
+        return when (s.mode) {
             RandomMode.NUMBER -> {
                 val min = s.min.toLongOrNull() ?: 0
                 val max = s.max.toLongOrNull() ?: 100
-                if (min > max) "Min must be ≤ Max"
+                if (min > max) "Min must be \u2264 Max"
                 else Random.nextLong(min, max + 1).toString()
             }
             RandomMode.DICE -> Random.nextInt(1, 7).toString()
@@ -60,6 +63,18 @@ class RandomGeneratorViewModel @Inject constructor() : ViewModel() {
                 else (1..length).map { chars.random() }.joinToString("")
             }
         }
-        _uiState.value = s.copy(result = result)
+    }
+
+    fun generate() {
+        val s = _uiState.value
+        val count = s.batchCount.toIntOrNull()?.coerceIn(1, 100) ?: 1
+        val results = (1..count).map { generateOne() }
+        val displayResult = results.joinToString("\n")
+        val newHistory = (results + s.history).take(50)
+        _uiState.value = s.copy(result = displayResult, history = newHistory)
+    }
+
+    fun clearHistory() {
+        _uiState.value = _uiState.value.copy(history = emptyList())
     }
 }
