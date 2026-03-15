@@ -32,6 +32,7 @@ class UserPreferencesRepository @Inject constructor(
         val TIMER_MINUTES = intPreferencesKey("timer_minutes")
         val TIMER_SECONDS = intPreferencesKey("timer_seconds")
         val RULER_DPI_OFFSET = floatPreferencesKey("ruler_dpi_offset")
+        val TIMER_ALARM_SOUND = stringPreferencesKey("timer_alarm_sound")
     }
 
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
@@ -107,6 +108,10 @@ class UserPreferencesRepository @Inject constructor(
             it[TIMER_SECONDS] = s
         }
     }
+
+    // Timer alarm sound
+    val timerAlarmSound: Flow<String> = dataStore.data.map { it[TIMER_ALARM_SOUND] ?: "" }
+    suspend fun setTimerAlarmSound(uri: String) { dataStore.edit { it[TIMER_ALARM_SOUND] = uri } }
 
     // Ruler
     val rulerDpiOffset: Flow<Float> = dataStore.data.map { it[RULER_DPI_OFFSET] ?: 0f }

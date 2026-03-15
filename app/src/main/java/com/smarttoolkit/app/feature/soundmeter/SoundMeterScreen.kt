@@ -1,6 +1,7 @@
 package com.smarttoolkit.app.feature.soundmeter
 
 import android.Manifest
+import android.content.Intent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,8 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -27,20 +32,67 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttoolkit.app.ui.components.PermissionHandler
 import com.smarttoolkit.app.ui.components.UtilityTopBar
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SoundMeterScreen(
     onBack: () -> Unit,
     viewModel: SoundMeterViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
-        topBar = { UtilityTopBar(title = "Sound Meter", onBack = onBack) }
+        topBar = {
+            UtilityTopBar(
+                title = "Sound Meter",
+                onBack = onBack,
+                actions = {
+                    if (state.timestampedHistory.isNotEmpty()) {
+                        IconButton(onClick = {
+                            val csv = viewModel.generateExportCsv()
+                            val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                            val fileName = "sound_meter_${dateFormat.format(Date())}.csv"
+                            try {
+                                val file = File(context.cacheDir, fileName)
+                                file.writeText(csv)
+                                val uri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    file
+                                )
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/csv"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, "Export Sound History"))
+                            } catch (_: Exception) {
+                                // Fallback: share as plain text
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, csv)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, "Export Sound History"))
+                            }
+                        }) {
+                            Icon(Icons.Default.Share, contentDescription = "Export")
+                        }
+                    }
+                }
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier

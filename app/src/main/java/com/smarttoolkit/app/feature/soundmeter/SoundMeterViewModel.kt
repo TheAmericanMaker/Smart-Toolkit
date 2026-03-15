@@ -19,12 +19,18 @@ import javax.inject.Inject
 import kotlin.math.log10
 import kotlin.math.sqrt
 
+data class SoundMeterEntry(
+    val timestampMs: Long,
+    val db: Double
+)
+
 data class SoundMeterUiState(
     val currentDb: Double = 0.0,
     val minDb: Double = Double.MAX_VALUE,
     val maxDb: Double = 0.0,
     val isRecording: Boolean = false,
-    val dbHistory: List<Double> = emptyList()
+    val dbHistory: List<Double> = emptyList(),
+    val timestampedHistory: List<SoundMeterEntry> = emptyList()
 )
 
 @HiltViewModel
@@ -75,16 +81,34 @@ class SoundMeterViewModel @Inject constructor() : ViewModel() {
 
                     val current = _uiState.value
                     val history = (current.dbHistory + clampedDb).takeLast(100)
+                    val entry = SoundMeterEntry(System.currentTimeMillis(), clampedDb)
+                    val timestamped = current.timestampedHistory + entry
                     _uiState.value = current.copy(
                         currentDb = clampedDb,
                         minDb = minOf(current.minDb, clampedDb),
                         maxDb = maxOf(current.maxDb, clampedDb),
-                        dbHistory = history
+                        dbHistory = history,
+                        timestampedHistory = timestamped
                     )
                 }
                 delay(100)
             }
         }
+    }
+
+    fun generateExportCsv(): String {
+        val state = _uiState.value
+        val sb = StringBuilder()
+        sb.appendLine("Timestamp,Decibels (dB)")
+        state.timestampedHistory.forEach { entry ->
+            sb.appendLine("${entry.timestampMs},%.1f".format(entry.db))
+        }
+        sb.appendLine()
+        sb.appendLine("Summary")
+        sb.appendLine("Min dB,%.1f".format(if (state.minDb == Double.MAX_VALUE) 0.0 else state.minDb))
+        sb.appendLine("Max dB,%.1f".format(state.maxDb))
+        sb.appendLine("Samples,${state.timestampedHistory.size}")
+        return sb.toString()
     }
 
     fun stopRecording() {

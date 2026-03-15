@@ -120,15 +120,12 @@ fun StorageScreen(
                 }
             }
 
-            if (state.externalTotal > 0) {
-                val extPercent = if (state.externalTotal > 0)
-                    state.externalUsed.toFloat() / state.externalTotal else 0f
-
-                Text("External Storage", style = MaterialTheme.typography.titleMedium)
+            state.externalVolumes.forEach { volume ->
+                Text(volume.label, style = MaterialTheme.typography.titleMedium)
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         LinearProgressIndicator(
-                            progress = { extPercent },
+                            progress = { volume.usedPercent },
                             modifier = Modifier.fillMaxWidth().height(12.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -137,21 +134,21 @@ fun StorageScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Used", style = MaterialTheme.typography.bodySmall)
-                            Text(formatBytes(state.externalUsed), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(formatBytes(volume.used), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Available", style = MaterialTheme.typography.bodySmall)
-                            Text(formatBytes(state.externalAvailable), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(formatBytes(volume.available), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Total", style = MaterialTheme.typography.bodySmall)
-                            Text(formatBytes(state.externalTotal), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(formatBytes(volume.total), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
