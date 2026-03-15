@@ -20,6 +20,7 @@ class UserPreferencesRepository @Inject constructor(
         val DARK_MODE = booleanPreferencesKey("dark_mode")
         val FAVORITE_ORDER = stringPreferencesKey("favorite_order")
         val USE_SYSTEM_THEME = booleanPreferencesKey("use_system_theme")
+        val COLOR_THEME = stringPreferencesKey("color_theme")
         val OCR_HINT_SHOWN = booleanPreferencesKey("ocr_hint_shown")
 
         // Utility persistence keys
@@ -37,6 +38,7 @@ class UserPreferencesRepository @Inject constructor(
 
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
     val useSystemTheme: Flow<Boolean> = dataStore.data.map { it[USE_SYSTEM_THEME] ?: true }
+    val colorTheme: Flow<String> = dataStore.data.map { it[COLOR_THEME] ?: "DYNAMIC" }
     val favorites: Flow<List<String>> = dataStore.data.map { prefs ->
         prefs[FAVORITE_ORDER]?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
     }
@@ -53,6 +55,10 @@ class UserPreferencesRepository @Inject constructor(
 
     suspend fun setUseSystemTheme(enabled: Boolean) {
         dataStore.edit { it[USE_SYSTEM_THEME] = enabled }
+    }
+
+    suspend fun setColorTheme(theme: String) {
+        dataStore.edit { it[COLOR_THEME] = theme }
     }
 
     suspend fun toggleFavorite(utilityId: String) {
