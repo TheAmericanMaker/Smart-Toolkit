@@ -6,12 +6,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,7 +43,17 @@ fun RulerScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        topBar = { UtilityTopBar(title = "Ruler", onBack = onBack) }
+        topBar = {
+            UtilityTopBar(
+                title = "Ruler",
+                onBack = onBack,
+                actions = {
+                    IconButton(onClick = viewModel::toggleCalibration) {
+                        Icon(Icons.Filled.Tune, contentDescription = "Calibrate")
+                    }
+                }
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -60,21 +77,43 @@ fun RulerScreen(
                 )
             }
 
+            if (state.showCalibration) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("DPI Calibration", style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            "Adjust if ruler doesn't match a physical ruler. Offset: %+.0f".format(state.dpiOffset),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Slider(
+                            value = state.dpiOffset,
+                            onValueChange = viewModel::setDpiOffset,
+                            valueRange = -50f..50f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             val density = LocalDensity.current
             val primary = MaterialTheme.colorScheme.primary
             val onSurface = MaterialTheme.colorScheme.onSurface
             val textMeasurer = rememberTextMeasurer()
+            val dpiOffset = state.dpiOffset
 
             Canvas(
                 modifier = Modifier
                     .width(120.dp)
                     .fillMaxHeight()
             ) {
-                val ydpi = density.density * 160f
-                val pxPerCm = ydpi / 2.54f
-                val pxPerInch = ydpi
+                val baseDpi = density.density * 160f
+                val calibratedDpi = baseDpi + dpiOffset
+                val pxPerCm = calibratedDpi / 2.54f
+                val pxPerInch = calibratedDpi
 
                 if (state.isMetric) {
                     val totalCm = (size.height / pxPerCm).toInt()

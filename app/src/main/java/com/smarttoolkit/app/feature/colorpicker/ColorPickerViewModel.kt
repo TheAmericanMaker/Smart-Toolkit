@@ -2,10 +2,16 @@ package com.smarttoolkit.app.feature.colorpicker
 
 import android.graphics.Color
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.db.HistoryDao
+import com.smarttoolkit.app.data.db.HistoryEntry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ColorPickerUiState(
@@ -19,17 +25,21 @@ data class ColorPickerUiState(
 )
 
 @HiltViewModel
-class ColorPickerViewModel @Inject constructor() : ViewModel() {
+class ColorPickerViewModel @Inject constructor(
+    private val historyDao: HistoryDao
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ColorPickerUiState())
     val uiState: StateFlow<ColorPickerUiState> = _uiState.asStateFlow()
+
+    val palette: StateFlow<List<HistoryEntry>> = historyDao.getByFeature("color_picker")
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun onColorSampled(r: Int, g: Int, b: Int) {
         val hex = String.format("#%02X%02X%02X", r, g, b)
         val hsv = FloatArray(3)
         Color.RGBToHSV(r, g, b, hsv)
 
-        // Convert HSV to HSL
         val h = hsv[0]
         val s = hsv[1]
         val v = hsv[2]
@@ -45,5 +55,29 @@ class ColorPickerViewModel @Inject constructor() : ViewModel() {
             saturation = sl,
             lightness = l
         )
+    }
+
+    fun saveColor() {
+        val state = _uiState.value
+        viewModelScope.launch {
+            // Avoid duplicate consecutive saves of the same color
+            val existing = palette.value
+            if (existing.firstOrNull()?.value == state.colorHex) return@launch
+            historyDao.insert(
+                HistoryEntry(
+                    featureKey = "color_picker",
+                    label = state.colorHex,
+                    value = state.colorHex
+                )
+            )
+        }
+    }
+
+    fun deleteColor(id: Long) {
+        viewModelScope.launch { historyDao.delete(id) }
+    }
+
+    fun clearPalette() {
+        viewModelScope.launch { historyDao.clearFeature("color_picker") }
     }
 }

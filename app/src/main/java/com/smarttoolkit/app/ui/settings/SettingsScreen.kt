@@ -87,19 +87,19 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                "Provided by Mid Michigan MFG, LLC",
+                "Provided by The American Maker & Claude Code",
                 style = MaterialTheme.typography.bodySmall
             )
             val uriHandler = LocalUriHandler.current
             val linkText = buildAnnotatedString {
-                pushStringAnnotation(tag = "URL", annotation = "https://midmichiganmfg.com")
+                pushStringAnnotation(tag = "URL", annotation = "https://www.youtube.com/@AmericanMaking")
                 withStyle(
                     SpanStyle(
                         color = MaterialTheme.colorScheme.primary,
                         textDecoration = TextDecoration.Underline
                     )
                 ) {
-                    append("midmichiganmfg.com")
+                    append("https://www.youtube.com/@AmericanMaking")
                 }
                 pop()
             }

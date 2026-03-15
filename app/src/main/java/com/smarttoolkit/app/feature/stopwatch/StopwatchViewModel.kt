@@ -75,6 +75,12 @@ class StopwatchViewModel @Inject constructor() : ViewModel() {
         )
     }
 
+    fun deleteLap(lapNumber: Int) {
+        _uiState.value = _uiState.value.copy(
+            laps = _uiState.value.laps.filter { it.lapNumber != lapNumber }
+        )
+    }
+
     fun reset() {
         tickJob?.cancel()
         accumulatedMs = 0L

@@ -34,6 +34,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttoolkit.app.feature.tipcalculator.RoundingMode
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -58,6 +59,18 @@ fun TipCalculatorScreen(
                 value = state.billAmount,
                 onValueChange = viewModel::onBillAmountChanged,
                 label = { Text("Bill Amount") },
+                prefix = { Text("$") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = state.taxAmount,
+                onValueChange = viewModel::onTaxAmountChanged,
+                label = { Text("Tax (optional)") },
                 prefix = { Text("$") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -115,6 +128,27 @@ fun TipCalculatorScreen(
                 Text(
                     if (state.numberOfPeople == 1) "person" else "people",
                     style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Rounding", style = MaterialTheme.typography.titleSmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = state.roundingMode == RoundingMode.NONE,
+                    onClick = { viewModel.setRoundingMode(RoundingMode.NONE) },
+                    label = { Text("None") }
+                )
+                FilterChip(
+                    selected = state.roundingMode == RoundingMode.ROUND_TOTAL,
+                    onClick = { viewModel.setRoundingMode(RoundingMode.ROUND_TOTAL) },
+                    label = { Text("Round Total") }
+                )
+                FilterChip(
+                    selected = state.roundingMode == RoundingMode.ROUND_PER_PERSON,
+                    onClick = { viewModel.setRoundingMode(RoundingMode.ROUND_PER_PERSON) },
+                    label = { Text("Round Per Person") }
                 )
             }
 

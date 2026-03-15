@@ -2,33 +2,33 @@
 
 A collection of 21 handy everyday tools in one Android app. Built with Jetpack Compose and Material 3.
 
-Provided by **Mid Michigan MFG, LLC** — [midmichiganmfg.com](https://midmichiganmfg.com)
+Provided by **The American Maker & Claude Code** — [midmichiganmfg.com](https://midmichiganmfg.com)
 
 ## Features
 
 | Utility | Description |
 |---------|-------------|
-| Flashlight | Toggle device flashlight on/off |
-| Stopwatch | Precision stopwatch with lap tracking |
-| Timer | Countdown timer with alarm and vibration |
-| Calculator | Basic and scientific calculator with expression parsing |
-| Battery | Real-time battery status, temperature, voltage, and health |
-| Compass | Digital compass with animated compass rose |
-| Network | Connection type, IP address, WiFi signal info |
-| Storage | Internal/external storage usage analyzer |
-| Ruler | On-screen ruler with labeled cm/mm and inch markings |
-| QR Scanner | Scan QR codes and barcodes using CameraX + ML Kit |
-| Unit Converter | Convert between units across 7 categories |
-| Text Tools | Character/word/sentence counts, case transforms, clipboard |
-| Random Generator | Random numbers, dice, coin flip, password generator |
-| Notepad | Simple note-taking with local Room database |
-| Device Info | Model, CPU, RAM, screen specs, Android version |
-| Sound Meter | Approximate ambient sound level measurement |
-| Bubble Level | Surface and side level with user calibration zeroing |
-| Tip Calculator | Bill splitting with customizable tip percentages |
-| Tally Counter | Persistent tap counter with haptic feedback |
-| Magnifier | Camera-based magnifying glass with zoom and torch |
-| Color Picker | Live camera color sampling with HEX, RGB, and HSL output |
+| Flashlight | Toggle flashlight with Steady, SOS (morse code), and Strobe modes |
+| Stopwatch | Precision stopwatch with lap tracking, swipe-to-delete laps, haptic feedback |
+| Timer | Countdown timer with quick presets (1m–30m), persisted duration, haptic feedback |
+| Calculator | Expression-based calculator with history panel, tap to reuse results, haptic feedback |
+| Battery | Real-time battery stats with color-coded arc gauge, tap to toggle °C/°F |
+| Compass | Digital compass with accuracy indicator, lock bearing marker, cardinal labels |
+| Network | Connection info with visual signal bars, ping test (latency to 8.8.8.8) |
+| Storage | Internal/external usage with arc chart, detailed breakdown, refresh |
+| Ruler | On-screen ruler (cm/mm and inches) with DPI calibration slider |
+| QR Scanner | Scan QR/barcodes with scan history, swipe-to-delete, tap to re-view |
+| Unit Converter | Convert across 7 categories, persisted selections, copy result, conversion formula |
+| Text Tools | Counts, case transforms, find & replace, remove duplicate lines, sort lines, word frequency |
+| Random Generator | Numbers, dice, coin, passwords with batch generation (1–100) and history |
+| Notepad | Rich note-taking with Room database, voice dictation at cursor, color labels |
+| Device Info | Model, CPU, RAM, screen specs grouped into Device/Software/Hardware/Display sections |
+| Sound Meter | Ambient dB measurement with color-coded gauge, live scrolling chart, min/max tracking |
+| Bubble Level | Surface and side level with calibration, haptic feedback on level |
+| Tip Calculator | Bill splitting with tax field, custom tips, rounding modes (total/per person) |
+| Tally Counter | Persistent counter (DataStore), reset confirmation dialog, haptic feedback |
+| Magnifier | Camera-based magnifier with zoom presets (2x–8x), slider, and torch |
+| Color Picker | Live camera color sampling with HEX/RGB/HSL, save palette (last 20), tap to copy |
 
 ## Screenshots
 
@@ -41,9 +41,9 @@ Provided by **Mid Michigan MFG, LLC** — [midmichiganmfg.com](https://midmichig
 - **Architecture:** MVVM with StateFlow
 - **DI:** Hilt
 - **Navigation:** Navigation Compose
-- **Local Storage:** Room (notes), DataStore Preferences (settings/favorites), SharedPreferences (tally counter)
+- **Local Storage:** Room (notes, history), DataStore Preferences (settings, favorites, utility state)
 - **Camera:** CameraX + ML Kit Barcode Scanning
-- **Sensors:** Accelerometer (compass, bubble level), microphone (sound meter)
+- **Sensors:** Accelerometer (compass, bubble level), magnetometer (compass), microphone (sound meter)
 - **Min SDK:** 26 (Android 8.0)
 - **Target SDK:** 34 (Android 14)
 
@@ -85,7 +85,8 @@ app/src/main/java/com/smarttoolkit/app/
 │   ├── theme/                   # Material 3 theme, colors, typography
 │   ├── home/                    # Dashboard with search and favorites
 │   ├── settings/                # Dark mode and app settings
-│   └── components/              # Shared UI components
+│   ├── components/              # Shared UI components (PermissionHandler, UtilityTopBar)
+│   └── util/                    # Haptic feedback utility
 ├── feature/                     # One package per utility
 │   ├── flashlight/
 │   ├── stopwatch/
@@ -108,8 +109,10 @@ app/src/main/java/com/smarttoolkit/app/
 │   ├── tallycounter/
 │   ├── magnifyingglass/
 │   └── colorpicker/
-├── data/                        # Room database, DataStore, models
-└── di/                          # Hilt modules
+├── data/
+│   ├── db/                      # Room database, HistoryEntry/DAO, migrations
+│   └── preferences/             # DataStore preferences repository
+└── di/                          # Hilt modules (database, DataStore)
 ```
 
 ## License

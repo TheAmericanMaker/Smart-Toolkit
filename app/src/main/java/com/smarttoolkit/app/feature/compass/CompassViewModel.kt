@@ -15,7 +15,9 @@ import javax.inject.Inject
 
 data class CompassUiState(
     val azimuth: Float = 0f,
-    val isAvailable: Boolean = true
+    val isAvailable: Boolean = true,
+    val accuracy: Int = -1,
+    val lockedBearing: Float? = null
 ) {
     val degrees: Int get() = ((azimuth + 360) % 360).toInt()
     val direction: String
@@ -80,7 +82,20 @@ class CompassViewModel @Inject constructor(
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    fun toggleLockBearing() {
+        val current = _uiState.value
+        _uiState.value = if (current.lockedBearing == null) {
+            current.copy(lockedBearing = (current.azimuth + 360) % 360)
+        } else {
+            current.copy(lockedBearing = null)
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, acc: Int) {
+        if (sensor?.type == Sensor.TYPE_MAGNETIC_FIELD) {
+            _uiState.value = _uiState.value.copy(accuracy = acc)
+        }
+    }
 
     private fun lowPass(input: FloatArray, output: FloatArray?): FloatArray {
         if (output == null) return input

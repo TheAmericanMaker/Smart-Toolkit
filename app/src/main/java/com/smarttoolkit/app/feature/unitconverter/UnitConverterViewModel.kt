@@ -1,10 +1,14 @@
 package com.smarttoolkit.app.feature.unitconverter
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class UnitConverterUiState(
@@ -20,24 +24,52 @@ data class UnitConverterUiState(
 }
 
 @HiltViewModel
-class UnitConverterViewModel @Inject constructor() : ViewModel() {
+class UnitConverterViewModel @Inject constructor(
+    private val prefs: UserPreferencesRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UnitConverterUiState())
     val uiState: StateFlow<UnitConverterUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val cat = prefs.ucCategory.first()
+            val from = prefs.ucFromUnit.first()
+            val to = prefs.ucToUnit.first()
+            // Validate indices against available categories/units
+            val safeCat = cat.coerceIn(0, unitCategories.lastIndex)
+            val maxUnit = unitCategories[safeCat].units.lastIndex
+            val safeFrom = from.coerceIn(0, maxUnit)
+            val safeTo = to.coerceIn(0, maxUnit)
+            _uiState.value = _uiState.value.copy(
+                categoryIndex = safeCat,
+                fromUnitIndex = safeFrom,
+                toUnitIndex = safeTo
+            )
+        }
+    }
+
+    private fun persistSelections() {
+        val s = _uiState.value
+        viewModelScope.launch { prefs.setUcSelections(s.categoryIndex, s.fromUnitIndex, s.toUnitIndex) }
+    }
 
     fun selectCategory(index: Int) {
         _uiState.value = _uiState.value.copy(
             categoryIndex = index, fromUnitIndex = 0, toUnitIndex = 1, inputValue = "", result = ""
         )
+        persistSelections()
     }
 
     fun selectFromUnit(index: Int) {
         _uiState.value = _uiState.value.copy(fromUnitIndex = index)
+        persistSelections()
         convert()
     }
 
     fun selectToUnit(index: Int) {
         _uiState.value = _uiState.value.copy(toUnitIndex = index)
+        persistSelections()
         convert()
     }
 
@@ -49,6 +81,7 @@ class UnitConverterViewModel @Inject constructor() : ViewModel() {
     fun swap() {
         val s = _uiState.value
         _uiState.value = s.copy(fromUnitIndex = s.toUnitIndex, toUnitIndex = s.fromUnitIndex)
+        persistSelections()
         convert()
     }
 

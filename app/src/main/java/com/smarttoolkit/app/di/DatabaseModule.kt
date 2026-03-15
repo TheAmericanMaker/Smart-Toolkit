@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.smarttoolkit.app.data.db.AppDatabase
 import com.smarttoolkit.app.data.db.ChecklistItemDao
+import com.smarttoolkit.app.data.db.HistoryDao
 import com.smarttoolkit.app.data.db.NoteDao
 import com.smarttoolkit.app.data.db.NoteImageDao
 import dagger.Module
@@ -25,7 +26,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "smart_toolkit.db"
         )
-            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
             .build()
     }
 
@@ -42,5 +43,10 @@ object DatabaseModule {
     @Provides
     fun provideNoteImageDao(database: AppDatabase): NoteImageDao {
         return database.noteImageDao()
+    }
+
+    @Provides
+    fun provideHistoryDao(database: AppDatabase): HistoryDao {
+        return database.historyDao()
     }
 }

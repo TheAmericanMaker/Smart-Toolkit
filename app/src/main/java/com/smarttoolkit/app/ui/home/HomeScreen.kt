@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
-import com.smarttoolkit.app.ui.components.AdBanner
+// import com.smarttoolkit.app.ui.components.AdBanner // Temporarily disabled for testing
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -168,9 +168,10 @@ fun HomeScreen(
                 }
             }
 
-            AdBanner(
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            // Temporarily disabled for testing
+            // AdBanner(
+            //     modifier = Modifier.align(Alignment.CenterHorizontally)
+            // )
         }
     }
 }

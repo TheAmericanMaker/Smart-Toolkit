@@ -1,22 +1,25 @@
 package com.smarttoolkit.app.feature.timer
 
 import android.content.Context
+import android.content.Intent
+import android.media.Ringtone
 import android.media.RingtoneManager
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.net.Uri
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class AlarmSound(
+    val title: String,
+    val uri: Uri
+)
 
 data class TimerUiState(
     val hours: Int = 0,
@@ -25,7 +28,9 @@ data class TimerUiState(
     val remainingMs: Long = 0L,
     val isRunning: Boolean = false,
     val isFinished: Boolean = false,
-    val isConfiguring: Boolean = true
+    val isConfiguring: Boolean = true,
+    val availableSounds: List<AlarmSound> = emptyList(),
+    val selectedSoundIndex: Int = 0
 ) {
     val displayTime: String
         get() {
@@ -39,89 +44,171 @@ data class TimerUiState(
 
 @HiltViewModel
 class TimerViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val prefs: UserPreferencesRepository,
+    private val stateHolder: TimerStateHolder
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TimerUiState())
-    val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<TimerUiState> = stateHolder.timerState
 
-    private var countdownJob: Job? = null
+    private var previewRingtone: Ringtone? = null
 
-    fun setHours(h: Int) { _uiState.value = _uiState.value.copy(hours = h.coerceIn(0, 23)) }
-    fun setMinutes(m: Int) { _uiState.value = _uiState.value.copy(minutes = m.coerceIn(0, 59)) }
-    fun setSeconds(s: Int) { _uiState.value = _uiState.value.copy(seconds = s.coerceIn(0, 59)) }
+    init {
+        val sounds = loadAlarmSounds()
+        viewModelScope.launch {
+            val h = prefs.timerHours.first()
+            val m = prefs.timerMinutes.first()
+            val s = prefs.timerSeconds.first()
+            val savedUri = prefs.timerAlarmSound.first()
+            val savedIndex = if (savedUri.isNotEmpty()) {
+                sounds.indexOfFirst { it.uri.toString() == savedUri }.coerceAtLeast(0)
+            } else 0
+            stateHolder.updateConfig(h, m, s)
+            stateHolder.updateSounds(sounds, savedIndex)
+        }
+    }
+
+    private fun loadAlarmSounds(): List<AlarmSound> {
+        val sounds = mutableListOf<AlarmSound>()
+        val defaultUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        sounds.add(AlarmSound("Default Alarm", defaultUri))
+
+        try {
+            val manager = RingtoneManager(context)
+            manager.setType(RingtoneManager.TYPE_ALARM)
+            val cursor = manager.cursor
+            while (cursor.moveToNext()) {
+                val title = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX)
+                val uri = manager.getRingtoneUri(cursor.position)
+                if (uri != defaultUri) {
+                    sounds.add(AlarmSound(title, uri))
+                }
+            }
+        } catch (_: Exception) {}
+
+        try {
+            val manager = RingtoneManager(context)
+            manager.setType(RingtoneManager.TYPE_NOTIFICATION)
+            val cursor = manager.cursor
+            while (cursor.moveToNext()) {
+                val title = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX)
+                val uri = manager.getRingtoneUri(cursor.position)
+                sounds.add(AlarmSound(title, uri))
+            }
+        } catch (_: Exception) {}
+
+        return sounds
+    }
+
+    fun selectSound(index: Int) {
+        val state = uiState.value
+        if (index in state.availableSounds.indices) {
+            stateHolder.updateSelectedSoundIndex(index)
+            viewModelScope.launch {
+                prefs.setTimerAlarmSound(state.availableSounds[index].uri.toString())
+            }
+        }
+    }
+
+    fun previewSound(index: Int) {
+        stopPreview()
+        val state = uiState.value
+        if (index in state.availableSounds.indices) {
+            try {
+                previewRingtone = RingtoneManager.getRingtone(context, state.availableSounds[index].uri)
+                previewRingtone?.play()
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun stopPreview() {
+        try {
+            previewRingtone?.stop()
+        } catch (_: Exception) {}
+        previewRingtone = null
+    }
+
+    fun setHours(h: Int) {
+        val state = uiState.value
+        stateHolder.updateConfig(h.coerceIn(0, 23), state.minutes, state.seconds)
+    }
+
+    fun setMinutes(m: Int) {
+        val state = uiState.value
+        stateHolder.updateConfig(state.hours, m.coerceIn(0, 59), state.seconds)
+    }
+
+    fun setSeconds(s: Int) {
+        val state = uiState.value
+        stateHolder.updateConfig(state.hours, state.minutes, s.coerceIn(0, 59))
+    }
+
+    fun applyPreset(totalMinutes: Int) {
+        val h = totalMinutes / 60
+        val m = totalMinutes % 60
+        stateHolder.updateConfig(h, m, 0)
+    }
 
     fun start() {
-        val state = _uiState.value
+        val state = uiState.value
         val totalMs = ((state.hours * 3600L) + (state.minutes * 60L) + state.seconds) * 1000L
         if (totalMs <= 0) return
 
-        _uiState.value = state.copy(
-            remainingMs = totalMs,
-            isRunning = true,
-            isConfiguring = false,
-            isFinished = false
-        )
-        startCountdown(totalMs)
-    }
+        viewModelScope.launch { prefs.setTimerDuration(state.hours, state.minutes, state.seconds) }
 
-    fun resume() {
-        if (_uiState.value.remainingMs > 0) {
-            _uiState.value = _uiState.value.copy(isRunning = true)
-            startCountdown(_uiState.value.remainingMs)
+        // Get the alarm URI for the service
+        val alarmUri = if (state.availableSounds.isNotEmpty() && state.selectedSoundIndex in state.availableSounds.indices) {
+            state.availableSounds[state.selectedSoundIndex].uri.toString()
+        } else ""
+
+        val intent = Intent(context, TimerForegroundService::class.java).apply {
+            action = TimerForegroundService.ACTION_START
+            putExtra(TimerForegroundService.EXTRA_DURATION_MS, totalMs)
+            putExtra(TimerForegroundService.EXTRA_ALARM_URI, alarmUri)
         }
+        ContextCompat.startForegroundService(context, intent)
     }
 
     fun pause() {
-        countdownJob?.cancel()
-        _uiState.value = _uiState.value.copy(isRunning = false)
+        sendServiceAction(TimerForegroundService.ACTION_PAUSE)
+    }
+
+    fun resume() {
+        sendServiceAction(TimerForegroundService.ACTION_RESUME)
     }
 
     fun cancel() {
-        countdownJob?.cancel()
-        _uiState.value = TimerUiState()
+        sendServiceAction(TimerForegroundService.ACTION_CANCEL)
     }
 
     fun dismissAlarm() {
-        _uiState.value = TimerUiState()
+        sendServiceAction(TimerForegroundService.ACTION_DISMISS)
     }
 
-    private fun startCountdown(totalMs: Long) {
-        countdownJob?.cancel()
-        val startTime = System.currentTimeMillis()
-        countdownJob = viewModelScope.launch {
-            while (true) {
-                val elapsed = System.currentTimeMillis() - startTime
-                val remaining = totalMs - elapsed
-                if (remaining <= 0) {
-                    _uiState.value = _uiState.value.copy(
-                        remainingMs = 0,
-                        isRunning = false,
-                        isFinished = true
-                    )
-                    playAlarm()
-                    break
+    private fun sendServiceAction(action: String) {
+        val intent = Intent(context, TimerForegroundService::class.java).apply {
+            this.action = action
+        }
+        try {
+            context.startService(intent)
+        } catch (_: Exception) {
+            // Service may not be running; handle state locally
+            viewModelScope.launch {
+                val h = prefs.timerHours.first()
+                val m = prefs.timerMinutes.first()
+                val s = prefs.timerSeconds.first()
+                when (action) {
+                    TimerForegroundService.ACTION_CANCEL -> stateHolder.cancel(h, m, s)
+                    TimerForegroundService.ACTION_DISMISS -> stateHolder.dismiss(h, m, s)
+                    TimerForegroundService.ACTION_PAUSE -> stateHolder.pause()
+                    TimerForegroundService.ACTION_RESUME -> stateHolder.resume()
                 }
-                _uiState.value = _uiState.value.copy(remainingMs = remaining)
-                delay(100)
             }
         }
     }
 
-    private fun playAlarm() {
-        try {
-            val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            RingtoneManager.getRingtone(context, uri)?.play()
-        } catch (_: Exception) {}
-
-        try {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-            vibrator.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
-        } catch (_: Exception) {}
+    override fun onCleared() {
+        super.onCleared()
+        stopPreview()
     }
 }

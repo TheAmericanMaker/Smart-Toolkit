@@ -21,9 +21,13 @@ data class BatteryUiState(
     val temperature: Float = 0f,
     val voltage: Int = 0,
     val health: String = "Unknown",
-    val technology: String = "Unknown"
+    val technology: String = "Unknown",
+    val showFahrenheit: Boolean = false
 ) {
     val percentage: Int get() = if (scale > 0) (level * 100 / scale) else 0
+    val temperatureDisplay: String get() =
+        if (showFahrenheit) "%.1f\u00B0F".format(temperature * 9f / 5f + 32f)
+        else "%.1f\u00B0C".format(temperature)
 }
 
 @HiltViewModel
@@ -75,6 +79,10 @@ class BatteryViewModel @Inject constructor(
             },
             technology = intent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY) ?: "Unknown"
         )
+    }
+
+    fun toggleTemperatureUnit() {
+        _uiState.value = _uiState.value.copy(showFahrenheit = !_uiState.value.showFahrenheit)
     }
 
     override fun onCleared() {

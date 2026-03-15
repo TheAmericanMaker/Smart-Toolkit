@@ -1,11 +1,14 @@
 package com.smarttoolkit.app.feature.tallycounter
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class TallyCounterUiState(
@@ -14,28 +17,33 @@ data class TallyCounterUiState(
 
 @HiltViewModel
 class TallyCounterViewModel @Inject constructor(
-    application: Application
+    private val prefs: UserPreferencesRepository
 ) : ViewModel() {
 
-    private val prefs = application.getSharedPreferences("tally_counter", android.content.Context.MODE_PRIVATE)
-
-    private val _uiState = MutableStateFlow(TallyCounterUiState(count = prefs.getInt("count", 0)))
+    private val _uiState = MutableStateFlow(TallyCounterUiState())
     val uiState: StateFlow<TallyCounterUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val saved = prefs.tallyCount.first()
+            _uiState.value = TallyCounterUiState(count = saved)
+        }
+    }
 
     fun increment() {
         val newCount = _uiState.value.count + 1
         _uiState.value = TallyCounterUiState(count = newCount)
-        prefs.edit().putInt("count", newCount).apply()
+        viewModelScope.launch { prefs.setTallyCount(newCount) }
     }
 
     fun decrement() {
         val newCount = maxOf(0, _uiState.value.count - 1)
         _uiState.value = TallyCounterUiState(count = newCount)
-        prefs.edit().putInt("count", newCount).apply()
+        viewModelScope.launch { prefs.setTallyCount(newCount) }
     }
 
     fun reset() {
         _uiState.value = TallyCounterUiState(count = 0)
-        prefs.edit().putInt("count", 0).apply()
+        viewModelScope.launch { prefs.setTallyCount(0) }
     }
 }
