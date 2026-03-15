@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
@@ -35,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttoolkit.app.ui.components.RequestNotificationPermission
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 
 @Composable
@@ -45,6 +48,8 @@ fun TallyCounterScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     var showResetDialog by remember { mutableStateOf(false) }
+
+    RequestNotificationPermission()
 
     if (showResetDialog) {
         AlertDialog(
@@ -69,6 +74,22 @@ fun TallyCounterScreen(
                 title = "Tally Counter",
                 onBack = onBack,
                 actions = {
+                    IconButton(
+                        onClick = {
+                            if (viewModel.isNotificationActive) {
+                                viewModel.stopNotificationService()
+                            } else {
+                                viewModel.startNotificationService()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            if (viewModel.isNotificationActive) Icons.Filled.Notifications
+                            else Icons.Filled.NotificationsOff,
+                            contentDescription = if (viewModel.isNotificationActive) "Unpin from notifications"
+                            else "Pin to notifications"
+                        )
+                    }
                     IconButton(
                         onClick = { showResetDialog = true },
                         enabled = state.count > 0

@@ -8,8 +8,8 @@ Provided by **The American Maker & Claude Code**
 
 | Utility | Description |
 |---------|-------------|
-| Flashlight | Toggle flashlight with Steady, SOS (morse code), and Strobe modes |
-| Stopwatch | Precision stopwatch with lap tracking, swipe-to-delete laps, haptic feedback |
+| Flashlight | Toggle flashlight with Steady, SOS (morse code), and Strobe modes; notification tray control with Turn Off button |
+| Stopwatch | Precision stopwatch with lap tracking, swipe-to-delete laps, haptic feedback; notification tray controls (pause/resume/lap/stop) |
 | Timer | Countdown timer with quick presets (1m–30m), background foreground service, notification controls (pause/resume/cancel/dismiss from tray), selectable alarm sounds |
 | Calculator | Expression-based calculator with history panel, tap to reuse results, haptic feedback |
 | Battery | Real-time battery stats with color-coded arc gauge, tap to toggle °C/°F |
@@ -26,7 +26,7 @@ Provided by **The American Maker & Claude Code**
 | Sound Meter | Ambient dB measurement with color-coded gauge, live scrolling chart, min/max tracking |
 | Bubble Level | Surface and side level with calibration, haptic feedback on level |
 | Tip Calculator | Bill splitting with tax field, custom tips, rounding modes (total/per person) |
-| Tally Counter | Persistent counter (DataStore), reset confirmation dialog, haptic feedback |
+| Tally Counter | Persistent counter (DataStore), reset confirmation dialog, haptic feedback; pin-to-notification with +1/−1 buttons |
 | Magnifier | Camera-based magnifier with zoom presets (2x–8x), slider, and torch |
 | Color Picker | Live camera color sampling with HEX/RGB/HSL, save palette (last 20), tap to copy |
 
@@ -47,7 +47,7 @@ A searchable in-app User Guide is available under **Settings > Help > User Guide
 - **Navigation:** Navigation Compose
 - **Local Storage:** Room (notes, history), DataStore Preferences (settings, favorites, utility state)
 - **Camera:** CameraX + ML Kit Barcode Scanning
-- **Background:** Foreground service (timer countdown & alarm notifications)
+- **Background:** Foreground services (timer, stopwatch, flashlight, tally counter notification controls)
 - **Sensors:** Accelerometer (compass, bubble level), magnetometer (compass), microphone (sound meter)
 - **Min SDK:** 26 (Android 8.0)
 - **Target SDK:** 34 (Android 14)

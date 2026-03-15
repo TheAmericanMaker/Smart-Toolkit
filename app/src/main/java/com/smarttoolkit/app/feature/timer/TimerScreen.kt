@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttoolkit.app.ui.components.RequestNotificationPermission
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 import com.smarttoolkit.app.ui.util.rememberHaptic
 
@@ -56,6 +57,8 @@ fun TimerScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = rememberHaptic()
     var showSoundPicker by remember { mutableStateOf(false) }
+
+    RequestNotificationPermission()
 
     Scaffold(
         topBar = { UtilityTopBar(title = "Timer", onBack = onBack) }

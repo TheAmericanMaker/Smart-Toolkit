@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttoolkit.app.ui.components.RequestNotificationPermission
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -34,6 +35,8 @@ fun FlashlightScreen(
     viewModel: FlashlightViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    RequestNotificationPermission()
 
     Scaffold(
         topBar = { UtilityTopBar(title = "Flashlight", onBack = onBack) }

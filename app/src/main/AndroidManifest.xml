@@ -53,6 +53,33 @@
                 android:value="timer_countdown" />
         </service>
 
+        <service
+            android:name=".feature.stopwatch.StopwatchForegroundService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="stopwatch_tracking" />
+        </service>
+
+        <service
+            android:name=".feature.flashlight.FlashlightForegroundService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="flashlight_control" />
+        </service>
+
+        <service
+            android:name=".feature.tallycounter.TallyCounterForegroundService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="tally_counter" />
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
