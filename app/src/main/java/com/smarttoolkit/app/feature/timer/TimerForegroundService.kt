@@ -136,11 +136,11 @@ class TimerForegroundService : Service() {
             val m = prefs.timerMinutes.first()
             val s = prefs.timerSeconds.first()
             stateHolder.cancel(h, m, s)
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            notificationManager.cancel(COUNTDOWN_NOTIFICATION_ID)
+            notificationManager.cancel(ALARM_NOTIFICATION_ID)
+            stopSelf()
         }
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        notificationManager.cancel(COUNTDOWN_NOTIFICATION_ID)
-        notificationManager.cancel(ALARM_NOTIFICATION_ID)
-        stopSelf()
     }
 
     private fun dismissAlarm() {
@@ -152,11 +152,11 @@ class TimerForegroundService : Service() {
             val m = prefs.timerMinutes.first()
             val s = prefs.timerSeconds.first()
             stateHolder.dismiss(h, m, s)
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            notificationManager.cancel(COUNTDOWN_NOTIFICATION_ID)
+            notificationManager.cancel(ALARM_NOTIFICATION_ID)
+            stopSelf()
         }
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        notificationManager.cancel(COUNTDOWN_NOTIFICATION_ID)
-        notificationManager.cancel(ALARM_NOTIFICATION_ID)
-        stopSelf()
     }
 
     private fun onTimerFinished(alarmUri: String) {
