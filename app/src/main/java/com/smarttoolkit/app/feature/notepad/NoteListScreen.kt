@@ -441,11 +441,16 @@ private fun NoteCard(
                         Icon(
                             imageVector = if (note.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
                             contentDescription = if (note.isPinned) "Unpin" else "Pin",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = "Delete",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }

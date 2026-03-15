@@ -372,26 +372,27 @@ fun NoteEditScreen(
                             Text("Attach image")
                         }
                     }
-                    OutlinedTextField(
-                        value = contentFieldValue,
-                        onValueChange = { newValue ->
-                            contentFieldValue = newValue
-                            viewModel.onContentChange(newValue.text)
-                        },
-                        label = { Text("Content") },
-                        trailingIcon = {
-                            IconButton(onClick = { launchDictation("content") }) {
-                                Icon(
-                                    Icons.Filled.Mic,
-                                    contentDescription = "Voice input",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
+                    Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                        OutlinedTextField(
+                            value = contentFieldValue,
+                            onValueChange = { newValue ->
+                                contentFieldValue = newValue
+                                viewModel.onContentChange(newValue.text)
+                            },
+                            label = { Text("Content") },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        IconButton(
+                            onClick = { launchDictation("content") },
+                            modifier = Modifier.align(Alignment.TopEnd)
+                        ) {
+                            Icon(
+                                Icons.Filled.Mic,
+                                contentDescription = "Voice input",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
 
                 NoteType.CHECKLIST -> {
