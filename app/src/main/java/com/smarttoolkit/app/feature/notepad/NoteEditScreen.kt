@@ -64,6 +64,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -89,6 +91,14 @@ fun NoteEditScreen(
 
     var showTemplates by rememberSaveable { mutableStateOf(false) }
     var viewingImageIndex by remember { mutableIntStateOf(-1) }
+    var contentFieldValue by remember { mutableStateOf(TextFieldValue(state.content)) }
+
+    // Sync from ViewModel when content changes externally (template, OCR, etc.)
+    LaunchedEffect(state.content) {
+        if (contentFieldValue.text != state.content) {
+            contentFieldValue = TextFieldValue(state.content, TextRange(state.content.length))
+        }
+    }
 
     // Show OCR hint when images are first added
     LaunchedEffect(state.images.size, ocrHintShown) {
@@ -134,6 +144,15 @@ fun NoteEditScreen(
                     viewModel.onTitleChange(
                         if (state.title.isBlank()) it else state.title + " " + it
                     )
+                } else if (state.type == NoteType.TEXT) {
+                    // Insert at cursor position
+                    val selection = contentFieldValue.selection
+                    val before = contentFieldValue.text.substring(0, selection.start)
+                    val after = contentFieldValue.text.substring(selection.end)
+                    val newText = before + it + after
+                    val newCursor = selection.start + it.length
+                    contentFieldValue = TextFieldValue(newText, TextRange(newCursor))
+                    viewModel.onContentChange(newText)
                 } else {
                     viewModel.onDictatedText(it)
                 }
@@ -354,8 +373,11 @@ fun NoteEditScreen(
                         }
                     }
                     OutlinedTextField(
-                        value = state.content,
-                        onValueChange = viewModel::onContentChange,
+                        value = contentFieldValue,
+                        onValueChange = { newValue ->
+                            contentFieldValue = newValue
+                            viewModel.onContentChange(newValue.text)
+                        },
                         label = { Text("Content") },
                         trailingIcon = {
                             IconButton(onClick = { launchDictation("content") }) {
