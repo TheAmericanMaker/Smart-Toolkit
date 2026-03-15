@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttoolkit.app.ui.components.UtilityTopBar
+import com.smarttoolkit.app.ui.util.rememberHaptic
 
 @Composable
 fun StopwatchScreen(
@@ -41,6 +42,7 @@ fun StopwatchScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val haptic = rememberHaptic()
 
     Scaffold(
         topBar = {
@@ -79,12 +81,12 @@ fun StopwatchScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedButton(onClick = viewModel::reset) { Text("Reset") }
-                Button(onClick = viewModel::startStop) {
+                OutlinedButton(onClick = { haptic(); viewModel.reset() }) { Text("Reset") }
+                Button(onClick = { haptic(); viewModel.startStop() }) {
                     Text(if (state.isRunning) "Stop" else "Start")
                 }
                 OutlinedButton(
-                    onClick = viewModel::lap,
+                    onClick = { haptic(); viewModel.lap() },
                     enabled = state.isRunning
                 ) { Text("Lap") }
             }

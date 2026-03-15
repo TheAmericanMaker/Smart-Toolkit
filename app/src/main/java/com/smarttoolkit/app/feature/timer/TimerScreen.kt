@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttoolkit.app.ui.components.UtilityTopBar
+import com.smarttoolkit.app.ui.util.rememberHaptic
 
 @Composable
 fun TimerScreen(
@@ -32,6 +33,7 @@ fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val haptic = rememberHaptic()
 
     Scaffold(
         topBar = { UtilityTopBar(title = "Timer", onBack = onBack) }
@@ -58,11 +60,11 @@ fun TimerScreen(
                     TimeField("S", state.seconds) { viewModel.setSeconds(it) }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
-                Button(onClick = viewModel::start) { Text("Start") }
+                Button(onClick = { haptic(); viewModel.start() }) { Text("Start") }
             } else if (state.isFinished) {
                 Text("Time's Up!", style = MaterialTheme.typography.displayMedium)
                 Spacer(modifier = Modifier.height(24.dp))
-                Button(onClick = viewModel::dismissAlarm) { Text("Dismiss") }
+                Button(onClick = { haptic(); viewModel.dismissAlarm() }) { Text("Dismiss") }
             } else {
                 Text(
                     text = state.displayTime,
@@ -71,8 +73,8 @@ fun TimerScreen(
                 )
                 Spacer(modifier = Modifier.height(32.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    OutlinedButton(onClick = viewModel::cancel) { Text("Cancel") }
-                    Button(onClick = { if (state.isRunning) viewModel.pause() else viewModel.resume() }) {
+                    OutlinedButton(onClick = { haptic(); viewModel.cancel() }) { Text("Cancel") }
+                    Button(onClick = { haptic(); if (state.isRunning) viewModel.pause() else viewModel.resume() }) {
                         Text(if (state.isRunning) "Pause" else "Resume")
                     }
                 }

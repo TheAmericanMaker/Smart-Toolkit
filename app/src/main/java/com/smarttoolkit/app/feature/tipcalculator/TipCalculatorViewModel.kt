@@ -1,10 +1,14 @@
 package com.smarttoolkit.app.feature.tipcalculator
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class TipCalculatorUiState(
@@ -19,10 +23,19 @@ data class TipCalculatorUiState(
 )
 
 @HiltViewModel
-class TipCalculatorViewModel @Inject constructor() : ViewModel() {
+class TipCalculatorViewModel @Inject constructor(
+    private val prefs: UserPreferencesRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TipCalculatorUiState())
     val uiState: StateFlow<TipCalculatorUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val savedTip = prefs.tipPercentage.first()
+            _uiState.value = _uiState.value.copy(tipPercentage = savedTip)
+        }
+    }
 
     fun onBillAmountChanged(text: String) {
         val filtered = text.filter { it.isDigit() || it == '.' }
@@ -36,6 +49,7 @@ class TipCalculatorViewModel @Inject constructor() : ViewModel() {
             tipPercentage = percent,
             isCustomTip = false
         )
+        viewModelScope.launch { prefs.setTipPercentage(percent) }
         recalculate()
     }
 
@@ -47,6 +61,7 @@ class TipCalculatorViewModel @Inject constructor() : ViewModel() {
             tipPercentage = percent,
             isCustomTip = true
         )
+        viewModelScope.launch { prefs.setTipPercentage(percent) }
         recalculate()
     }
 

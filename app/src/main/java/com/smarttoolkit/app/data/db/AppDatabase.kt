@@ -6,16 +6,30 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [NoteEntity::class, ChecklistItemEntity::class, NoteImageEntity::class],
-    version = 3,
+    entities = [NoteEntity::class, ChecklistItemEntity::class, NoteImageEntity::class, HistoryEntry::class],
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
     abstract fun checklistItemDao(): ChecklistItemDao
     abstract fun noteImageDao(): NoteImageDao
+    abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS history (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "featureKey TEXT NOT NULL, " +
+                    "label TEXT NOT NULL, " +
+                    "value TEXT NOT NULL, " +
+                    "timestamp INTEGER NOT NULL DEFAULT 0)"
+                )
+            }
+        }
+
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE notes ADD COLUMN colorLabel TEXT")

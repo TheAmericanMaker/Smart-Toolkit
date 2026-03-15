@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttoolkit.app.ui.components.UtilityTopBar
+import com.smarttoolkit.app.ui.util.rememberHaptic
 
 @Composable
 fun RandomGeneratorScreen(
@@ -44,6 +45,7 @@ fun RandomGeneratorScreen(
     viewModel: RandomGeneratorViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val haptic = rememberHaptic()
 
     Scaffold(
         topBar = { UtilityTopBar(title = "Random Generator", onBack = onBack) }
@@ -105,7 +107,7 @@ fun RandomGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Button(onClick = viewModel::generate) { Text("Generate") }
+                Button(onClick = { haptic(); viewModel.generate() }) { Text("Generate") }
                 Spacer(modifier = Modifier.height(24.dp))
 
                 if (state.result.isNotEmpty()) {

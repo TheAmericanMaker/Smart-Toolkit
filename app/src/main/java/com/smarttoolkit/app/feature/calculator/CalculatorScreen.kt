@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttoolkit.app.ui.components.UtilityTopBar
+import com.smarttoolkit.app.ui.util.rememberHaptic
 
 @Composable
 fun CalculatorScreen(
@@ -41,6 +42,7 @@ fun CalculatorScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val haptic = rememberHaptic()
 
     Scaffold(
         topBar = {
@@ -100,7 +102,7 @@ fun CalculatorScreen(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf("sin(", "cos(", "tan(", "log(", "ln(", "sqrt(").forEach { fn ->
                         OutlinedButton(
-                            onClick = { viewModel.onInput(fn) },
+                            onClick = { haptic(); viewModel.onInput(fn) },
                             modifier = Modifier.weight(1f)
                         ) { Text(fn.removeSuffix("("), style = MaterialTheme.typography.bodySmall) }
                     }
@@ -108,7 +110,7 @@ fun CalculatorScreen(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf("^" to "^", "(" to "(", ")" to ")", "π" to "π", "e" to "e").forEach { (display, value) ->
                         OutlinedButton(
-                            onClick = { viewModel.onInput(value) },
+                            onClick = { haptic(); viewModel.onInput(value) },
                             modifier = Modifier.weight(1f)
                         ) { Text(display, style = MaterialTheme.typography.bodySmall) }
                     }
@@ -131,10 +133,10 @@ fun CalculatorScreen(
                     row.forEach { (display, value) ->
                         val mod = if (value == "0") Modifier.weight(2f) else Modifier.weight(1f)
                         when (value) {
-                            "C" -> FilledTonalButton(onClick = viewModel::onClear, modifier = mod) { Text(display) }
-                            "⌫" -> FilledTonalButton(onClick = viewModel::onBackspace, modifier = mod) { Text(display) }
-                            "=" -> Button(onClick = viewModel::onEquals, modifier = mod) { Text(display) }
-                            else -> OutlinedButton(onClick = { viewModel.onInput(value) }, modifier = mod) { Text(display) }
+                            "C" -> FilledTonalButton(onClick = { haptic(); viewModel.onClear() }, modifier = mod) { Text(display) }
+                            "⌫" -> FilledTonalButton(onClick = { haptic(); viewModel.onBackspace() }, modifier = mod) { Text(display) }
+                            "=" -> Button(onClick = { haptic(); viewModel.onEquals() }, modifier = mod) { Text(display) }
+                            else -> OutlinedButton(onClick = { haptic(); viewModel.onInput(value) }, modifier = mod) { Text(display) }
                         }
                     }
                 }
