@@ -263,7 +263,7 @@ class TimerForegroundService : Service() {
         )
 
         val builder = NotificationCompat.Builder(this, CHANNEL_COUNTDOWN)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setContentTitle("Timer")
             .setContentText("$timeText remaining")
             .setOngoing(true)
@@ -292,7 +292,7 @@ class TimerForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ALARM)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setContentTitle("Time's Up!")
             .setContentText("Tap Dismiss to stop the alarm")
             .setOngoing(true)
