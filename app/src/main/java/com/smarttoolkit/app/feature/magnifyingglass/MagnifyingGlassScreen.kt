@@ -5,6 +5,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -146,6 +148,23 @@ private fun ZoomControls(
     maxZoom: Float,
     onZoomChanged: (Float) -> Unit
 ) {
+    // Preset zoom chips
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+    ) {
+        listOf(2f, 4f, 6f, 8f).forEach { preset ->
+            if (preset <= maxZoom) {
+                AssistChip(
+                    onClick = { onZoomChanged(preset) },
+                    label = { Text("${preset.toInt()}x") }
+                )
+            }
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()

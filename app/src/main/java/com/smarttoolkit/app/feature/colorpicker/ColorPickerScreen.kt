@@ -11,6 +11,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,9 +25,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,10 +65,23 @@ fun ColorPickerScreen(
     viewModel: ColorPickerViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val palette by viewModel.palette.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     Scaffold(
-        topBar = { UtilityTopBar(title = "Color Picker", onBack = onBack) }
+        topBar = {
+            UtilityTopBar(
+                title = "Color Picker",
+                onBack = onBack,
+                actions = {
+                    if (palette.isNotEmpty()) {
+                        IconButton(onClick = viewModel::clearPalette) {
+                            Icon(Icons.Filled.DeleteSweep, contentDescription = "Clear palette")
+                        }
+                    }
+                }
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -77,7 +96,38 @@ fun ColorPickerScreen(
                     onColorSampled = viewModel::onColorSampled,
                     modifier = Modifier.weight(1f)
                 )
-                ColorInfoPanel(state = state, context = context)
+
+                // Palette row
+                if (palette.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Saved", style = MaterialTheme.typography.labelSmall)
+                        palette.take(20).forEach { entry ->
+                            val color = try {
+                                Color(android.graphics.Color.parseColor(entry.value))
+                            } catch (_: Exception) { Color.Gray }
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                                    .clickable {
+                                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                        clipboard.setPrimaryClip(ClipData.newPlainText("color", entry.value))
+                                    }
+                            )
+                        }
+                    }
+                }
+
+                ColorInfoPanel(state = state, context = context, onSave = viewModel::saveColor)
             }
         }
     }
@@ -140,7 +190,6 @@ private fun CameraWithColorSampling(
             factory = { previewView },
             modifier = Modifier.fillMaxSize()
         )
-        // Crosshair overlay
         Canvas(modifier = Modifier.fillMaxSize()) {
             val cx = size.width / 2
             val cy = size.height / 2
@@ -156,7 +205,7 @@ private fun CameraWithColorSampling(
 }
 
 @Composable
-private fun ColorInfoPanel(state: ColorPickerUiState, context: Context) {
+private fun ColorInfoPanel(state: ColorPickerUiState, context: Context, onSave: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -188,6 +237,9 @@ private fun ColorInfoPanel(state: ColorPickerUiState, context: Context) {
                     ),
                     style = MaterialTheme.typography.bodySmall
                 )
+            }
+            IconButton(onClick = onSave) {
+                Icon(Icons.Filled.AddCircle, contentDescription = "Save color")
             }
             IconButton(onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
