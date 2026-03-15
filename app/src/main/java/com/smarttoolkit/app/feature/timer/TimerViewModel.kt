@@ -8,6 +8,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
@@ -15,6 +16,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,7 +41,8 @@ data class TimerUiState(
 
 @HiltViewModel
 class TimerViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val prefs: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
@@ -47,14 +50,31 @@ class TimerViewModel @Inject constructor(
 
     private var countdownJob: Job? = null
 
+    init {
+        viewModelScope.launch {
+            val h = prefs.timerHours.first()
+            val m = prefs.timerMinutes.first()
+            val s = prefs.timerSeconds.first()
+            _uiState.value = _uiState.value.copy(hours = h, minutes = m, seconds = s)
+        }
+    }
+
     fun setHours(h: Int) { _uiState.value = _uiState.value.copy(hours = h.coerceIn(0, 23)) }
     fun setMinutes(m: Int) { _uiState.value = _uiState.value.copy(minutes = m.coerceIn(0, 59)) }
     fun setSeconds(s: Int) { _uiState.value = _uiState.value.copy(seconds = s.coerceIn(0, 59)) }
+
+    fun applyPreset(totalMinutes: Int) {
+        val h = totalMinutes / 60
+        val m = totalMinutes % 60
+        _uiState.value = _uiState.value.copy(hours = h, minutes = m, seconds = 0)
+    }
 
     fun start() {
         val state = _uiState.value
         val totalMs = ((state.hours * 3600L) + (state.minutes * 60L) + state.seconds) * 1000L
         if (totalMs <= 0) return
+
+        viewModelScope.launch { prefs.setTimerDuration(state.hours, state.minutes, state.seconds) }
 
         _uiState.value = state.copy(
             remainingMs = totalMs,
@@ -79,11 +99,21 @@ class TimerViewModel @Inject constructor(
 
     fun cancel() {
         countdownJob?.cancel()
-        _uiState.value = TimerUiState()
+        viewModelScope.launch {
+            val h = prefs.timerHours.first()
+            val m = prefs.timerMinutes.first()
+            val s = prefs.timerSeconds.first()
+            _uiState.value = TimerUiState(hours = h, minutes = m, seconds = s)
+        }
     }
 
     fun dismissAlarm() {
-        _uiState.value = TimerUiState()
+        viewModelScope.launch {
+            val h = prefs.timerHours.first()
+            val m = prefs.timerMinutes.first()
+            val s = prefs.timerSeconds.first()
+            _uiState.value = TimerUiState(hours = h, minutes = m, seconds = s)
+        }
     }
 
     private fun startCountdown(totalMs: Long) {

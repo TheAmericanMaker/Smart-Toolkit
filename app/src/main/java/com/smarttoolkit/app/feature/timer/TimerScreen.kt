@@ -2,6 +2,8 @@ package com.smarttoolkit.app.feature.timer
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -27,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 import com.smarttoolkit.app.ui.util.rememberHaptic
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TimerScreen(
     onBack: () -> Unit,
@@ -48,7 +52,21 @@ fun TimerScreen(
         ) {
             if (state.isConfiguring) {
                 Text("Set Timer", style = MaterialTheme.typography.headlineMedium)
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Quick presets
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf(1, 3, 5, 10, 15, 30).forEach { mins ->
+                        AssistChip(
+                            onClick = { viewModel.applyPreset(mins) },
+                            label = { Text("${mins}m") }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically

@@ -27,6 +27,9 @@ class UserPreferencesRepository @Inject constructor(
         val UC_CATEGORY = intPreferencesKey("uc_category")
         val UC_FROM_UNIT = intPreferencesKey("uc_from_unit")
         val UC_TO_UNIT = intPreferencesKey("uc_to_unit")
+        val TIMER_HOURS = intPreferencesKey("timer_hours")
+        val TIMER_MINUTES = intPreferencesKey("timer_minutes")
+        val TIMER_SECONDS = intPreferencesKey("timer_seconds")
     }
 
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
@@ -88,6 +91,18 @@ class UserPreferencesRepository @Inject constructor(
             it[UC_CATEGORY] = category
             it[UC_FROM_UNIT] = from
             it[UC_TO_UNIT] = to
+        }
+    }
+
+    // Timer
+    val timerHours: Flow<Int> = dataStore.data.map { it[TIMER_HOURS] ?: 0 }
+    val timerMinutes: Flow<Int> = dataStore.data.map { it[TIMER_MINUTES] ?: 5 }
+    val timerSeconds: Flow<Int> = dataStore.data.map { it[TIMER_SECONDS] ?: 0 }
+    suspend fun setTimerDuration(h: Int, m: Int, s: Int) {
+        dataStore.edit {
+            it[TIMER_HOURS] = h
+            it[TIMER_MINUTES] = m
+            it[TIMER_SECONDS] = s
         }
     }
 }
