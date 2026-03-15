@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -22,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
@@ -60,14 +63,14 @@ private fun SoundMeterContent(viewModel: SoundMeterViewModel) {
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val primary = MaterialTheme.colorScheme.primary
         val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
 
-        Canvas(modifier = Modifier.size(200.dp)) {
-            val stroke = 16.dp.toPx()
+        // Arc gauge
+        Canvas(modifier = Modifier.size(180.dp)) {
+            val stroke = 14.dp.toPx()
             drawArc(
                 color = surfaceVariant,
                 startAngle = 135f, sweepAngle = 270f,
@@ -76,9 +79,14 @@ private fun SoundMeterContent(viewModel: SoundMeterViewModel) {
                 size = Size(size.width - stroke, size.height - stroke),
                 style = Stroke(stroke, cap = StrokeCap.Round)
             )
+            val arcColor = when {
+                state.currentDb > 85 -> Color(0xFFF44336)
+                state.currentDb > 60 -> Color(0xFFFFC107)
+                else -> Color(0xFF4CAF50)
+            }
             val sweep = (state.currentDb / 120.0 * 270).toFloat()
             drawArc(
-                color = primary,
+                color = arcColor,
                 startAngle = 135f, sweepAngle = sweep,
                 useCenter = false,
                 topLeft = Offset(stroke / 2, stroke / 2),
@@ -87,13 +95,28 @@ private fun SoundMeterContent(viewModel: SoundMeterViewModel) {
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
         Text(
             "%.0f dB".format(state.currentDb),
             style = MaterialTheme.typography.displayMedium,
             fontFamily = FontFamily.Monospace
         )
-        Spacer(modifier = Modifier.height(16.dp))
+
+        // Level description
+        val levelLabel = when {
+            state.currentDb > 100 -> "Extremely loud"
+            state.currentDb > 85 -> "Very loud - hearing damage risk"
+            state.currentDb > 70 -> "Loud"
+            state.currentDb > 50 -> "Moderate"
+            state.currentDb > 30 -> "Quiet"
+            else -> "Very quiet"
+        }
+        Text(
+            levelLabel,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -112,13 +135,56 @@ private fun SoundMeterContent(viewModel: SoundMeterViewModel) {
             }
         }
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Live chart
+        if (state.dbHistory.isNotEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("History", style = MaterialTheme.typography.labelSmall)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    val chartPrimary = primary
+                    val chartSurfaceVariant = surfaceVariant
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                    ) {
+                        val history = state.dbHistory
+                        if (history.size < 2) return@Canvas
+
+                        // Grid lines at 30, 60, 90 dB
+                        listOf(30.0, 60.0, 90.0).forEach { level ->
+                            val y = size.height * (1f - (level / 120.0).toFloat())
+                            drawLine(
+                                chartSurfaceVariant,
+                                Offset(0f, y),
+                                Offset(size.width, y),
+                                strokeWidth = 1f
+                            )
+                        }
+
+                        // Draw the waveform path
+                        val path = Path()
+                        val stepX = size.width / (history.size - 1).coerceAtLeast(1)
+                        history.forEachIndexed { index, db ->
+                            val x = index * stepX
+                            val y = size.height * (1f - (db / 120.0).toFloat())
+                            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                        }
+                        drawPath(path, chartPrimary, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             "Approximate readings only",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         if (state.isRecording) {
             OutlinedButton(onClick = viewModel::stopRecording) { Text("Stop") }

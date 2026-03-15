@@ -22,7 +22,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -35,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttoolkit.app.ui.components.UtilityTopBar
+import com.smarttoolkit.app.ui.util.rememberHaptic
 import kotlin.math.min
 
 @Composable
@@ -65,6 +70,19 @@ fun BubbleLevelScreen(
                     )
                 }
             } else {
+                val haptic = rememberHaptic()
+                var wasLevel by remember { mutableStateOf(false) }
+                var wasSideLevel by remember { mutableStateOf(false) }
+
+                LaunchedEffect(state.isLevel) {
+                    if (state.isLevel && !wasLevel) haptic()
+                    wasLevel = state.isLevel
+                }
+                LaunchedEffect(state.isSideLevel) {
+                    if (state.isSideLevel && !wasSideLevel) haptic()
+                    wasSideLevel = state.isSideLevel
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Calibrate button

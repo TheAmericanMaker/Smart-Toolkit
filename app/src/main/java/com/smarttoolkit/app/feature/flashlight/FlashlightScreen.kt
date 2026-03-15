@@ -2,6 +2,8 @@ package com.smarttoolkit.app.feature.flashlight
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -11,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material3.FilledIconToggleButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -24,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FlashlightScreen(
     onBack: () -> Unit,
@@ -44,6 +48,29 @@ fun FlashlightScreen(
             if (!state.isAvailable) {
                 Text("Flash not available on this device", style = MaterialTheme.typography.bodyLarge)
             } else {
+                // Mode selection
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                ) {
+                    FilterChip(
+                        selected = state.mode == FlashMode.STEADY,
+                        onClick = { viewModel.setMode(FlashMode.STEADY) },
+                        label = { Text("Steady") }
+                    )
+                    FilterChip(
+                        selected = state.mode == FlashMode.SOS,
+                        onClick = { viewModel.setMode(FlashMode.SOS) },
+                        label = { Text("SOS") }
+                    )
+                    FilterChip(
+                        selected = state.mode == FlashMode.STROBE,
+                        onClick = { viewModel.setMode(FlashMode.STROBE) },
+                        label = { Text("Strobe") }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
                 FilledIconToggleButton(
                     checked = state.isOn,
                     onCheckedChange = { viewModel.toggle() },
@@ -57,9 +84,23 @@ fun FlashlightScreen(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = if (state.isOn) "ON" else "OFF",
+                    text = when {
+                        !state.isOn -> "OFF"
+                        state.mode == FlashMode.SOS -> "SOS"
+                        state.mode == FlashMode.STROBE -> "STROBE"
+                        else -> "ON"
+                    },
                     style = MaterialTheme.typography.headlineMedium
                 )
+
+                if (state.mode == FlashMode.STROBE) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Warning: Strobe may cause discomfort",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }

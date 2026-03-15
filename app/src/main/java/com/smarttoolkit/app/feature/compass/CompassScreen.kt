@@ -1,13 +1,22 @@
 package com.smarttoolkit.app.feature.compass
 
+import android.hardware.SensorManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -51,15 +60,40 @@ fun CompassScreen(
                 Text("Compass not available on this device", style = MaterialTheme.typography.bodyLarge)
             } else {
                 Text(
-                    text = "${state.degrees}° ${state.direction}",
+                    text = "${state.degrees}\u00B0 ${state.direction}",
                     style = MaterialTheme.typography.headlineLarge
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+
+                // Accuracy indicator
+                val accuracyText = when (state.accuracy) {
+                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> "High accuracy"
+                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> "Medium accuracy"
+                    SensorManager.SENSOR_STATUS_ACCURACY_LOW -> "Low accuracy - calibrate by moving phone in figure-8"
+                    SensorManager.SENSOR_STATUS_UNRELIABLE -> "Unreliable - calibrate by moving phone in figure-8"
+                    else -> ""
+                }
+                val accuracyColor = when (state.accuracy) {
+                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> Color(0xFF4CAF50)
+                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> Color(0xFFFFC107)
+                    SensorManager.SENSOR_STATUS_ACCURACY_LOW -> Color(0xFFFF9800)
+                    SensorManager.SENSOR_STATUS_UNRELIABLE -> Color(0xFFF44336)
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+                if (accuracyText.isNotEmpty()) {
+                    Text(
+                        accuracyText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = accuracyColor
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 val primary = MaterialTheme.colorScheme.primary
                 val outline = MaterialTheme.colorScheme.outline
                 val error = MaterialTheme.colorScheme.error
                 val textMeasurer = rememberTextMeasurer()
+                val lockedBearing = state.lockedBearing
 
                 Canvas(modifier = Modifier.size(280.dp)) {
                     val centerX = size.width / 2
@@ -73,6 +107,18 @@ fun CompassScreen(
                         center = Offset(centerX, centerY),
                         style = Stroke(2.dp.toPx())
                     )
+
+                    // Locked bearing marker
+                    if (lockedBearing != null) {
+                        rotate(-state.azimuth + lockedBearing, Offset(centerX, centerY)) {
+                            val markerY = centerY - radius + 4.dp.toPx()
+                            drawCircle(
+                                color = Color(0xFFFFC107),
+                                radius = 6.dp.toPx(),
+                                center = Offset(centerX, markerY)
+                            )
+                        }
+                    }
 
                     // Rotate compass rose
                     rotate(-state.azimuth, Offset(centerX, centerY)) {
@@ -119,6 +165,32 @@ fun CompassScreen(
 
                     // Center dot
                     drawCircle(color = primary, radius = 4.dp.toPx(), center = Offset(centerX, centerY))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Lock bearing button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    AssistChip(
+                        onClick = viewModel::toggleLockBearing,
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    if (state.lockedBearing != null) Icons.Filled.Lock else Icons.Filled.LockOpen,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    if (state.lockedBearing != null) "Locked: %.0f\u00B0".format(state.lockedBearing)
+                                    else "Lock Bearing"
+                                )
+                            }
+                        }
+                    )
                 }
             }
         }

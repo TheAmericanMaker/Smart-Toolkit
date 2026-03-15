@@ -23,7 +23,8 @@ data class SoundMeterUiState(
     val currentDb: Double = 0.0,
     val minDb: Double = Double.MAX_VALUE,
     val maxDb: Double = 0.0,
-    val isRecording: Boolean = false
+    val isRecording: Boolean = false,
+    val dbHistory: List<Double> = emptyList()
 )
 
 @HiltViewModel
@@ -73,10 +74,12 @@ class SoundMeterViewModel @Inject constructor() : ViewModel() {
                     val clampedDb = db.coerceIn(0.0, 120.0)
 
                     val current = _uiState.value
+                    val history = (current.dbHistory + clampedDb).takeLast(100)
                     _uiState.value = current.copy(
                         currentDb = clampedDb,
                         minDb = minOf(current.minDb, clampedDb),
-                        maxDb = maxOf(current.maxDb, clampedDb)
+                        maxDb = maxOf(current.maxDb, clampedDb),
+                        dbHistory = history
                     )
                 }
                 delay(100)
