@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -29,6 +33,7 @@ import com.smarttoolkit.app.ui.components.UtilityTopBar
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onUserGuide: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,6 +79,21 @@ fun SettingsScreen(
                         onCheckedChange = viewModel::setDarkMode
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Text("Help", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onUserGuide,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.HelpOutline,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("User Guide")
             }
 
             Spacer(modifier = Modifier.height(24.dp))

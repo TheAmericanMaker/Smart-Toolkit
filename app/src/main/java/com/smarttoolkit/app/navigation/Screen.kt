@@ -28,4 +28,5 @@ sealed class Screen(val route: String) {
     data object TallyCounter : Screen("tallycounter")
     data object MagnifyingGlass : Screen("magnifyingglass")
     data object ColorPicker : Screen("colorpicker")
+    data object UserGuide : Screen("userguide")
 }

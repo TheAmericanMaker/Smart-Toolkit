@@ -32,6 +32,7 @@ import com.smarttoolkit.app.feature.storage.StorageScreen
 import com.smarttoolkit.app.feature.texttools.TextToolsScreen
 import com.smarttoolkit.app.feature.timer.TimerScreen
 import com.smarttoolkit.app.feature.unitconverter.UnitConverterScreen
+import com.smarttoolkit.app.ui.guide.UserGuideScreen
 import com.smarttoolkit.app.ui.home.HomeScreen
 import com.smarttoolkit.app.ui.settings.SettingsScreen
 
@@ -58,7 +59,13 @@ fun NavGraph(
             )
         }
         composable(Screen.Settings.route) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onUserGuide = { navController.navigate(Screen.UserGuide.route) }
+            )
+        }
+        composable(Screen.UserGuide.route) {
+            UserGuideScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.Flashlight.route) {
             FlashlightScreen(onBack = { navController.popBackStack() })
