@@ -4,9 +4,10 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,8 +35,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -57,6 +58,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -252,55 +254,105 @@ fun NoteListScreen(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .animateContentSize()
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    // Pinned section header
                     val pinnedNotes = uiState.notes.filter { it.isPinned }
                     val unpinnedNotes = uiState.notes.filter { !it.isPinned }
 
                     if (pinnedNotes.isNotEmpty()) {
-                        item {
+                        item(key = "pinned_header") {
                             Text(
                                 "Pinned",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
+                                modifier = Modifier
+                                    .padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
+                                    .animateItem()
                             )
                         }
                         items(pinnedNotes, key = { it.id }) { note ->
-                            NoteCard(
+                            SwipeToDismissNoteCard(
                                 note = note,
                                 onClick = { onNoteClick(note.id) },
                                 onDelete = { viewModel.deleteNote(note) },
-                                onTogglePin = { viewModel.togglePin(note) }
+                                onTogglePin = { viewModel.togglePin(note) },
+                                modifier = Modifier.animateItem()
                             )
                         }
                     }
 
                     if (pinnedNotes.isNotEmpty() && unpinnedNotes.isNotEmpty()) {
-                        item {
+                        item(key = "other_header") {
                             Text(
                                 "Other",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
+                                modifier = Modifier
+                                    .padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
+                                    .animateItem()
                             )
                         }
                     }
 
                     items(unpinnedNotes, key = { it.id }) { note ->
-                        NoteCard(
+                        SwipeToDismissNoteCard(
                             note = note,
                             onClick = { onNoteClick(note.id) },
                             onDelete = { viewModel.deleteNote(note) },
-                            onTogglePin = { viewModel.togglePin(note) }
+                            onTogglePin = { viewModel.togglePin(note) },
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SwipeToDismissNoteCard(
+    note: com.smarttoolkit.app.data.db.NoteEntity,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+    onTogglePin: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) {
+                onDelete()
+                true
+            } else false
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        },
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true
+    ) {
+        NoteCard(
+            note = note,
+            onClick = onClick,
+            onDelete = onDelete,
+            onTogglePin = onTogglePin
+        )
     }
 }
 
@@ -315,16 +367,21 @@ private fun NoteCard(
         com.smarttoolkit.app.feature.notepad.smart.NoteCategorizer.getCategoryColor(it)
     }
 
+    val cardContainerColor = if (categoryColor != null) {
+        categoryColor.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clickable(onClick = onClick),
-        colors = if (categoryColor != null) {
-            CardDefaults.cardColors(containerColor = categoryColor.copy(alpha = 0.1f))
-        } else CardDefaults.cardColors()
+        colors = CardDefaults.cardColors(containerColor = cardContainerColor)
     ) {
         ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             headlineContent = {
                 Text(
                     note.title.ifBlank { "Untitled" },
@@ -356,7 +413,7 @@ private fun NoteCard(
                         Text(
                             " · ${note.category}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
+                            color = categoryColor ?: MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -365,7 +422,7 @@ private fun NoteCard(
                 Icon(
                     imageVector = if (note.type == "CHECKLIST") Icons.Filled.Checklist else Icons.Filled.Notes,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = categoryColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             trailingContent = {

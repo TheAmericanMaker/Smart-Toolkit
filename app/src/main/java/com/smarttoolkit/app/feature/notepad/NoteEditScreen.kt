@@ -112,7 +112,8 @@ fun NoteEditScreen(
         if (file.exists()) {
             FullScreenImageViewer(
                 imageFile = file,
-                onDismiss = { viewingImageIndex = -1 }
+                onDismiss = { viewingImageIndex = -1 },
+                onTextExtracted = { text -> viewModel.onExtractedText(text) }
             )
         }
     }

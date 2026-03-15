@@ -251,6 +251,23 @@ class NotepadViewModel @Inject constructor(
         )
     }
 
+    fun onExtractedText(text: String) {
+        val state = _uiState.value
+        val lines = com.smarttoolkit.app.feature.notepad.smart.ImageTextExtractor.splitIntoItems(text)
+        if (state.type == NoteType.CHECKLIST) {
+            val items = state.checklistItems.toMutableList()
+            val insertBefore = items.indexOfLast { it.text.isBlank() }.takeIf { it >= 0 } ?: items.size
+            lines.forEach { line ->
+                items.add(insertBefore, ChecklistItemUiState(text = line))
+            }
+            _uiState.value = state.copy(checklistItems = items)
+        } else {
+            val separator = if (state.content.isNotBlank()) "\n" else ""
+            _uiState.value = state.copy(content = state.content + separator + lines.joinToString("\n"))
+        }
+        scheduleAutoSave()
+    }
+
     fun addSuggestedItem(text: String) {
         val items = _uiState.value.checklistItems.toMutableList()
         val lastEmpty = items.indexOfLast { it.text.isBlank() }
