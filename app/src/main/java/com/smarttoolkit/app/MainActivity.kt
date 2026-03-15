@@ -10,7 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
-import com.smarttoolkit.app.feature.timer.TimerForegroundService
 import com.smarttoolkit.app.navigation.NavGraph
 import com.smarttoolkit.app.ui.settings.SettingsViewModel
 import com.smarttoolkit.app.ui.theme.SmartToolkitTheme
@@ -46,7 +45,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleNavigationIntent(intent: Intent?) {
-        val route = intent?.getStringExtra(TimerForegroundService.EXTRA_NAVIGATE_TO)
+        val route = intent?.getStringExtra("navigate_to")
         if (route != null) {
             pendingNavigationRoute.value = route
         }

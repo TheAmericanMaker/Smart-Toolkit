@@ -1,14 +1,12 @@
 package com.smarttoolkit.app.feature.stopwatch
 
+import android.content.Context
+import android.content.Intent
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class LapTime(val lapNumber: Int, val splitMs: Long, val totalMs: Long)
@@ -31,60 +29,41 @@ fun formatTime(ms: Long): String {
 }
 
 @HiltViewModel
-class StopwatchViewModel @Inject constructor() : ViewModel() {
+class StopwatchViewModel @Inject constructor(
+    private val stateHolder: StopwatchStateHolder,
+    @ApplicationContext private val context: Context
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(StopwatchUiState())
-    val uiState: StateFlow<StopwatchUiState> = _uiState.asStateFlow()
-
-    private var tickJob: Job? = null
-    private var startTimeNano = 0L
-    private var accumulatedMs = 0L
-    private var lastLapMs = 0L
+    val uiState: StateFlow<StopwatchUiState> = stateHolder.uiState
 
     fun startStop() {
-        if (_uiState.value.isRunning) pause() else start()
-    }
-
-    private fun start() {
-        startTimeNano = System.nanoTime()
-        _uiState.value = _uiState.value.copy(isRunning = true)
-        tickJob = viewModelScope.launch {
-            while (true) {
-                val now = System.nanoTime()
-                val elapsed = accumulatedMs + (now - startTimeNano) / 1_000_000
-                _uiState.value = _uiState.value.copy(elapsedMs = elapsed)
-                delay(16)
+        if (uiState.value.isRunning) {
+            sendServiceAction(StopwatchForegroundService.ACTION_PAUSE)
+        } else {
+            if (uiState.value.elapsedMs > 0L) {
+                sendServiceAction(StopwatchForegroundService.ACTION_RESUME)
+            } else {
+                sendServiceAction(StopwatchForegroundService.ACTION_START)
             }
         }
     }
 
-    private fun pause() {
-        tickJob?.cancel()
-        accumulatedMs += (System.nanoTime() - startTimeNano) / 1_000_000
-        _uiState.value = _uiState.value.copy(isRunning = false, elapsedMs = accumulatedMs)
-    }
-
     fun lap() {
-        if (!_uiState.value.isRunning) return
-        val totalMs = _uiState.value.elapsedMs
-        val splitMs = totalMs - lastLapMs
-        lastLapMs = totalMs
-        val lapNumber = _uiState.value.laps.size + 1
-        _uiState.value = _uiState.value.copy(
-            laps = _uiState.value.laps + LapTime(lapNumber, splitMs, totalMs)
-        )
+        sendServiceAction(StopwatchForegroundService.ACTION_LAP)
     }
 
     fun deleteLap(lapNumber: Int) {
-        _uiState.value = _uiState.value.copy(
-            laps = _uiState.value.laps.filter { it.lapNumber != lapNumber }
-        )
+        stateHolder.deleteLap(lapNumber)
     }
 
     fun reset() {
-        tickJob?.cancel()
-        accumulatedMs = 0L
-        lastLapMs = 0L
-        _uiState.value = StopwatchUiState()
+        sendServiceAction(StopwatchForegroundService.ACTION_STOP)
+    }
+
+    private fun sendServiceAction(action: String) {
+        val intent = Intent(context, StopwatchForegroundService::class.java).apply {
+            this.action = action
+        }
+        ContextCompat.startForegroundService(context, intent)
     }
 }

@@ -1,14 +1,15 @@
 package com.smarttoolkit.app.feature.tallycounter
 
+import android.content.Context
+import android.content.Intent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class TallyCounterUiState(
@@ -17,33 +18,46 @@ data class TallyCounterUiState(
 
 @HiltViewModel
 class TallyCounterViewModel @Inject constructor(
-    private val prefs: UserPreferencesRepository
+    private val stateHolder: TallyCounterStateHolder,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TallyCounterUiState())
-    val uiState: StateFlow<TallyCounterUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<TallyCounterUiState> = stateHolder.uiState
+
+    var isNotificationActive by mutableStateOf(false)
+        private set
 
     init {
-        viewModelScope.launch {
-            val saved = prefs.tallyCount.first()
-            _uiState.value = TallyCounterUiState(count = saved)
-        }
+        stateHolder.ensureLoaded()
     }
 
     fun increment() {
-        val newCount = _uiState.value.count + 1
-        _uiState.value = TallyCounterUiState(count = newCount)
-        viewModelScope.launch { prefs.setTallyCount(newCount) }
+        stateHolder.increment()
     }
 
     fun decrement() {
-        val newCount = maxOf(0, _uiState.value.count - 1)
-        _uiState.value = TallyCounterUiState(count = newCount)
-        viewModelScope.launch { prefs.setTallyCount(newCount) }
+        stateHolder.decrement()
     }
 
     fun reset() {
-        _uiState.value = TallyCounterUiState(count = 0)
-        viewModelScope.launch { prefs.setTallyCount(0) }
+        stateHolder.reset()
+    }
+
+    fun startNotificationService() {
+        if (isNotificationActive) return
+        isNotificationActive = true
+        val intent = Intent(context, TallyCounterForegroundService::class.java).apply {
+            action = TallyCounterForegroundService.ACTION_START
+        }
+        ContextCompat.startForegroundService(context, intent)
+    }
+
+    fun stopNotificationService() {
+        if (!isNotificationActive) return
+        isNotificationActive = false
+        val intent = Intent(context, TallyCounterForegroundService::class.java).apply {
+            action = TallyCounterForegroundService.ACTION_STOP
+        }
+        try { context.startService(intent) } catch (_: Exception) {}
     }
 }

@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
@@ -69,6 +71,22 @@ fun TallyCounterScreen(
                 title = "Tally Counter",
                 onBack = onBack,
                 actions = {
+                    IconButton(
+                        onClick = {
+                            if (viewModel.isNotificationActive) {
+                                viewModel.stopNotificationService()
+                            } else {
+                                viewModel.startNotificationService()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            if (viewModel.isNotificationActive) Icons.Filled.Notifications
+                            else Icons.Filled.NotificationsOff,
+                            contentDescription = if (viewModel.isNotificationActive) "Unpin from notifications"
+                            else "Pin to notifications"
+                        )
+                    }
                     IconButton(
                         onClick = { showResetDialog = true },
                         enabled = state.count > 0
