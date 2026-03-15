@@ -26,14 +26,16 @@ class FlashlightViewModel @Inject constructor(
     val uiState: StateFlow<FlashlightUiState> = stateHolder.uiState
 
     fun toggle() {
+        val wasOn = stateHolder.uiState.value.isOn
         stateHolder.toggle()
-        val state = stateHolder.uiState.value
-        if (state.isOn) {
+        if (!wasOn) {
+            // Turning on — start service to show notification
             val intent = Intent(context, FlashlightForegroundService::class.java).apply {
                 action = FlashlightForegroundService.ACTION_START
             }
             ContextCompat.startForegroundService(context, intent)
         } else {
+            // Turning off — stop service
             val intent = Intent(context, FlashlightForegroundService::class.java).apply {
                 action = FlashlightForegroundService.ACTION_STOP
             }

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttoolkit.app.ui.components.RequestNotificationPermission
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 
 @Composable
@@ -47,6 +48,8 @@ fun TallyCounterScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     var showResetDialog by remember { mutableStateOf(false) }
+
+    RequestNotificationPermission()
 
     if (showResetDialog) {
         AlertDialog(
