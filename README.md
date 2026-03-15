@@ -2,7 +2,7 @@
 
 A collection of 21 handy everyday tools in one Android app. Built with Jetpack Compose and Material 3.
 
-Provided by **The American Maker & Claude Code** — [midmichiganmfg.com](https://midmichiganmfg.com)
+Provided by **The American Maker & Claude Code**
 
 ## Features
 
