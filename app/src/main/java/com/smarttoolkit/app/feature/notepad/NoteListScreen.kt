@@ -81,6 +81,7 @@ fun NoteListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showSearch by rememberSaveable { mutableStateOf(false) }
+    var searchText by rememberSaveable { mutableStateOf("") }
     var showMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -123,7 +124,13 @@ fun NoteListScreen(
                 title = "Notepad",
                 onBack = onBack,
                 actions = {
-                    IconButton(onClick = { showSearch = !showSearch }) {
+                    IconButton(onClick = {
+                        showSearch = !showSearch
+                        if (!showSearch) {
+                            searchText = ""
+                            viewModel.onSearchQueryChange("")
+                        }
+                    }) {
                         Icon(Icons.Filled.Search, contentDescription = "Search")
                     }
                     IconButton(onClick = { showMenu = true }) {
@@ -150,8 +157,15 @@ fun NoteListScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNewNote) {
-                Icon(Icons.Filled.Add, contentDescription = "New note")
+            FloatingActionButton(
+                onClick = {
+                    if (uiState.filterType == NoteType.CHECKLIST) onNewChecklist() else onNewNote()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = if (uiState.filterType == NoteType.CHECKLIST) "New checklist" else "New note"
+                )
             }
         }
     ) { padding ->
@@ -163,8 +177,11 @@ fun NoteListScreen(
             // Search bar
             AnimatedVisibility(visible = showSearch) {
                 OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = viewModel::onSearchQueryChange,
+                    value = searchText,
+                    onValueChange = { text ->
+                        searchText = text
+                        viewModel.onSearchQueryChange(text)
+                    },
                     label = { Text("Search notes") },
                     leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                     modifier = Modifier
