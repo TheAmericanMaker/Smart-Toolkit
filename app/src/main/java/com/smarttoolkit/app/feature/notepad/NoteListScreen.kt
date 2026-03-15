@@ -371,8 +371,11 @@ private fun NoteCard(
     }
     val effectiveColor = noteColor ?: categoryColor
 
+    val surfaceColor = MaterialTheme.colorScheme.surface
     val cardContainerColor = if (effectiveColor != null) {
-        effectiveColor.copy(alpha = 0.15f)
+        // Blend the note color with the surface so the card stays opaque.
+        // A translucent card lets the SwipeToDismiss background bleed through.
+        androidx.compose.ui.graphics.lerp(surfaceColor, effectiveColor, 0.15f)
     } else {
         MaterialTheme.colorScheme.surfaceVariant
     }
