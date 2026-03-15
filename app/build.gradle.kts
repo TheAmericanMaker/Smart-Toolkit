@@ -95,6 +95,7 @@ dependencies {
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
     implementation(libs.mlkit.barcode)
+    implementation(libs.mlkit.text.recognition)
     implementation(libs.concurrent.futures)
     implementation(libs.concurrent.futures.ktx)
     implementation(libs.guava)

@@ -86,12 +86,16 @@ fun NavGraph(navController: NavHostController) {
             NoteListScreen(
                 onBack = { navController.popBackStack() },
                 onNoteClick = { noteId -> navController.navigate(Screen.NoteEdit.createRoute(noteId)) },
-                onNewNote = { navController.navigate(Screen.NoteEdit.createNewRoute()) }
+                onNewNote = { navController.navigate(Screen.NoteEdit.createNewRoute()) },
+                onNewChecklist = { navController.navigate(Screen.NoteEdit.createNewRoute("CHECKLIST")) }
             )
         }
         composable(
             route = Screen.NoteEdit.route,
-            arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("noteId") { type = NavType.StringType },
+                navArgument("type") { type = NavType.StringType; defaultValue = "TEXT" }
+            )
         ) {
             NoteEditScreen(onBack = { navController.popBackStack() })
         }

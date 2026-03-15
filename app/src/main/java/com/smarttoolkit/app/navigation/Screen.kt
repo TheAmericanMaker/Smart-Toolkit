@@ -17,9 +17,9 @@ sealed class Screen(val route: String) {
     data object TextTools : Screen("texttools")
     data object RandomGenerator : Screen("randomgenerator")
     data object NoteList : Screen("notepad")
-    data object NoteEdit : Screen("notepad/{noteId}") {
+    data object NoteEdit : Screen("notepad/{noteId}?type={type}") {
         fun createRoute(noteId: Long) = "notepad/$noteId"
-        fun createNewRoute() = "notepad/-1"
+        fun createNewRoute(type: String = "TEXT") = "notepad/-1?type=$type"
     }
     data object DeviceInfo : Screen("deviceinfo")
     data object SoundMeter : Screen("soundmeter")
