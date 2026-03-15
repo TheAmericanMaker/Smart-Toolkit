@@ -87,7 +87,7 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                "Provided by Mid Michigan MFG, LLC",
+                "Provided by The American Maker & Claude Code",
                 style = MaterialTheme.typography.bodySmall
             )
             val uriHandler = LocalUriHandler.current
