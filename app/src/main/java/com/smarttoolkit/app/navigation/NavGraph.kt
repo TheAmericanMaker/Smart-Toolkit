@@ -1,11 +1,15 @@
 package com.smarttoolkit.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import kotlinx.coroutines.flow.MutableStateFlow
 import com.smarttoolkit.app.feature.battery.BatteryScreen
 import com.smarttoolkit.app.feature.bubblelevel.BubbleLevelScreen
 import com.smarttoolkit.app.feature.colorpicker.ColorPickerScreen
@@ -32,7 +36,20 @@ import com.smarttoolkit.app.ui.home.HomeScreen
 import com.smarttoolkit.app.ui.settings.SettingsScreen
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    pendingRoute: MutableStateFlow<String?> = MutableStateFlow(null)
+) {
+    val route by pendingRoute.collectAsState()
+    LaunchedEffect(route) {
+        route?.let {
+            navController.navigate(it) {
+                launchSingleTop = true
+            }
+            pendingRoute.value = null
+        }
+    }
+
     NavHost(navController = navController, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
             HomeScreen(

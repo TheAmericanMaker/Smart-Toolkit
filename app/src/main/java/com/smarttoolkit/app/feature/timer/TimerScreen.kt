@@ -114,13 +114,11 @@ fun TimerScreen(
                 Text("Time's Up!", style = MaterialTheme.typography.displayMedium)
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
-                    onClick = { haptic(); viewModel.stopAlarm() },
+                    onClick = { haptic(); viewModel.dismissAlarm() },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     )
-                ) { Text("Stop Alarm") }
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedButton(onClick = { haptic(); viewModel.dismissAlarm() }) { Text("Dismiss") }
+                ) { Text("Dismiss") }
             } else {
                 Text(
                     text = state.displayTime,
@@ -143,7 +141,7 @@ fun TimerScreen(
         val sheetState = rememberModalBottomSheetState()
         ModalBottomSheet(
             onDismissRequest = {
-                viewModel.stopAlarm()
+                viewModel.stopPreview()
                 showSoundPicker = false
             },
             sheetState = sheetState
