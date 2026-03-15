@@ -10,6 +10,7 @@ data class NoteEntity(
     val content: String = "",
     val type: String = "TEXT",
     val category: String? = null,
+    val colorLabel: String? = null,
     val isPinned: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

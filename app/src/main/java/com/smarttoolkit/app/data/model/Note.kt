@@ -8,6 +8,7 @@ data class Note(
     val content: String = "",
     val type: NoteType = NoteType.TEXT,
     val category: String? = null,
+    val colorLabel: String? = null,
     val isPinned: Boolean = false,
     val checklistItems: List<ChecklistItem> = emptyList(),
     val images: List<NoteImage> = emptyList(),

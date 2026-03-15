@@ -49,6 +49,7 @@ data class NoteEditUiState(
     val content: String = "",
     val type: NoteType = NoteType.TEXT,
     val category: String? = null,
+    val colorLabel: String? = null,
     val isPinned: Boolean = false,
     val checklistItems: List<ChecklistItemUiState> = emptyList(),
     val images: List<NoteImageUiState> = emptyList(),
@@ -94,6 +95,7 @@ class NotepadViewModel @Inject constructor(
                         content = note.content,
                         type = note.type,
                         category = note.category,
+                        colorLabel = note.colorLabel,
                         isPinned = note.isPinned,
                         checklistItems = note.checklistItems.map {
                             ChecklistItemUiState(id = it.id, text = it.text, isChecked = it.isChecked)
@@ -281,6 +283,11 @@ class NotepadViewModel @Inject constructor(
         scheduleAutoSave()
     }
 
+    fun onColorLabelChange(colorLabel: String?) {
+        _uiState.value = _uiState.value.copy(colorLabel = colorLabel)
+        scheduleAutoSave()
+    }
+
     fun onDictatedText(text: String) {
         val state = _uiState.value
         if (state.type == NoteType.CHECKLIST) {
@@ -335,6 +342,7 @@ class NotepadViewModel @Inject constructor(
                 content = state.content,
                 type = state.type,
                 category = state.category,
+                colorLabel = state.colorLabel,
                 isPinned = state.isPinned,
                 checklistItems = state.checklistItems.mapIndexed { index, item ->
                     ChecklistItem(text = item.text, isChecked = item.isChecked, position = index)

@@ -363,12 +363,16 @@ private fun NoteCard(
     onDelete: () -> Unit,
     onTogglePin: () -> Unit
 ) {
+    val noteColor = note.colorLabel?.let {
+        com.smarttoolkit.app.feature.notepad.smart.NoteCategorizer.getNoteColor(it)
+    }
     val categoryColor = note.category?.let {
         com.smarttoolkit.app.feature.notepad.smart.NoteCategorizer.getCategoryColor(it)
     }
+    val effectiveColor = noteColor ?: categoryColor
 
-    val cardContainerColor = if (categoryColor != null) {
-        categoryColor.copy(alpha = 0.15f)
+    val cardContainerColor = if (effectiveColor != null) {
+        effectiveColor.copy(alpha = 0.15f)
     } else {
         MaterialTheme.colorScheme.surfaceVariant
     }
@@ -409,7 +413,13 @@ private fun NoteCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val fmt = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
                     Text(fmt.format(Date(note.updatedAt)), style = MaterialTheme.typography.labelSmall)
-                    if (note.category != null) {
+                    if (note.colorLabel != null) {
+                        Text(
+                            " · ${note.colorLabel}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = noteColor ?: MaterialTheme.colorScheme.primary
+                        )
+                    } else if (note.category != null) {
                         Text(
                             " · ${note.category}",
                             style = MaterialTheme.typography.labelSmall,
@@ -422,7 +432,7 @@ private fun NoteCard(
                 Icon(
                     imageVector = if (note.type == "CHECKLIST") Icons.Filled.Checklist else Icons.Filled.Notes,
                     contentDescription = null,
-                    tint = categoryColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = effectiveColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             trailingContent = {

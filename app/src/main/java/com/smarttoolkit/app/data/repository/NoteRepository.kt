@@ -45,6 +45,7 @@ class NoteRepository @Inject constructor(
             content = note.content,
             type = note.type.name,
             category = note.category,
+            colorLabel = note.colorLabel,
             isPinned = note.isPinned,
             createdAt = note.createdAt,
             updatedAt = now
@@ -99,6 +100,7 @@ class NoteRepository @Inject constructor(
             content = note.content,
             type = note.type.name,
             category = note.category,
+            colorLabel = note.colorLabel,
             isPinned = note.isPinned,
             createdAt = note.createdAt,
             updatedAt = note.updatedAt
@@ -160,6 +162,7 @@ private fun NoteEntity.toDomain(
     content = content,
     type = try { NoteType.valueOf(type) } catch (_: Exception) { NoteType.TEXT },
     category = category,
+    colorLabel = colorLabel,
     isPinned = isPinned,
     checklistItems = checklistItems,
     images = images,

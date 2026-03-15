@@ -11,6 +11,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -20,11 +26,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FormatColorReset
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Share
@@ -51,6 +62,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,6 +72,7 @@ import com.smarttoolkit.app.feature.notepad.components.ChecklistItemRow
 import com.smarttoolkit.app.feature.notepad.components.FullScreenImageViewer
 import com.smarttoolkit.app.feature.notepad.components.ImageAttachmentRow
 import com.smarttoolkit.app.feature.notepad.smart.ChecklistSuggestionProvider
+import com.smarttoolkit.app.feature.notepad.smart.NoteCategorizer
 import com.smarttoolkit.app.feature.notepad.templates.TemplatePickerBottomSheet
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 
@@ -106,6 +120,8 @@ fun NoteEditScreen(
         uri?.let { viewModel.addImageFromUri(it) }
     }
 
+    var dictationTarget by remember { mutableStateOf("content") }
+
     val speechLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -113,14 +129,24 @@ fun NoteEditScreen(
             val text = result.data
                 ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
                 ?.firstOrNull()
-            text?.let { viewModel.onDictatedText(it) }
+            text?.let {
+                if (dictationTarget == "title") {
+                    viewModel.onTitleChange(
+                        if (state.title.isBlank()) it else state.title + " " + it
+                    )
+                } else {
+                    viewModel.onDictatedText(it)
+                }
+            }
         }
     }
 
-    val launchDictation = {
+    val launchDictation: (String) -> Unit = { target ->
+        dictationTarget = target
+        val prompt = if (target == "title") "Speak your title..." else "Speak your note..."
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your note...")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, prompt)
         }
         speechLauncher.launch(intent)
     }
@@ -228,11 +254,75 @@ fun NoteEditScreen(
                 value = state.title,
                 onValueChange = viewModel::onTitleChange,
                 label = { Text("Title") },
+                trailingIcon = {
+                    IconButton(onClick = { launchDictation("title") }) {
+                        Icon(
+                            Icons.Filled.Mic,
+                            contentDescription = "Voice input for title",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Color picker
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // "No color" option
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .border(
+                            width = if (state.colorLabel == null) 2.dp else 1.dp,
+                            color = if (state.colorLabel == null) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant,
+                            shape = CircleShape
+                        )
+                        .clickable { viewModel.onColorLabelChange(null) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.FormatColorReset,
+                        contentDescription = "No color",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                NoteCategorizer.noteColors.forEach { (label, color) ->
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .border(
+                                width = if (state.colorLabel == label) 2.dp else 0.dp,
+                                color = if (state.colorLabel == label) MaterialTheme.colorScheme.primary
+                                    else Color.Transparent,
+                                shape = CircleShape
+                            )
+                            .clickable { viewModel.onColorLabelChange(label) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (state.colorLabel == label) {
+                            Icon(
+                                Icons.Filled.Check,
+                                contentDescription = label,
+                                modifier = Modifier.size(16.dp),
+                                tint = Color.White
+                            )
+                        }
+                    }
+                }
+            }
 
             // Image attachments
             if (state.images.isNotEmpty() || state.type != NoteType.TEXT) {
@@ -268,7 +358,7 @@ fun NoteEditScreen(
                         onValueChange = viewModel::onContentChange,
                         label = { Text("Content") },
                         trailingIcon = {
-                            IconButton(onClick = { launchDictation() }) {
+                            IconButton(onClick = { launchDictation("content") }) {
                                 Icon(
                                     Icons.Filled.Mic,
                                     contentDescription = "Voice input",
@@ -362,7 +452,7 @@ fun NoteEditScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.weight(1f))
-                                IconButton(onClick = { launchDictation() }) {
+                                IconButton(onClick = { launchDictation("content") }) {
                                     Icon(
                                         imageVector = Icons.Filled.Mic,
                                         contentDescription = "Voice input",

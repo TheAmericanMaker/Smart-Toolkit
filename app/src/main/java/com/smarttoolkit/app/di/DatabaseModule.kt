@@ -25,7 +25,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "smart_toolkit.db"
         )
-            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
             .build()
     }
 

@@ -42,4 +42,20 @@ object NoteCategorizer {
     }
 
     fun getAllCategories(): List<String> = categories.keys.toList()
+
+    // User-selectable color labels (independent of auto-categorization)
+    val noteColors = linkedMapOf(
+        "Red" to Color(0xFFF44336),
+        "Orange" to Color(0xFFFF9800),
+        "Yellow" to Color(0xFFFFEB3B),
+        "Green" to Color(0xFF4CAF50),
+        "Teal" to Color(0xFF009688),
+        "Blue" to Color(0xFF2196F3),
+        "Purple" to Color(0xFF9C27B0),
+        "Pink" to Color(0xFFE91E63),
+        "Brown" to Color(0xFF795548),
+        "Gray" to Color(0xFF9E9E9E)
+    )
+
+    fun getNoteColor(label: String): Color? = noteColors[label]
 }
