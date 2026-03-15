@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +31,7 @@ class UserPreferencesRepository @Inject constructor(
         val TIMER_HOURS = intPreferencesKey("timer_hours")
         val TIMER_MINUTES = intPreferencesKey("timer_minutes")
         val TIMER_SECONDS = intPreferencesKey("timer_seconds")
+        val RULER_DPI_OFFSET = floatPreferencesKey("ruler_dpi_offset")
     }
 
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
@@ -105,4 +107,8 @@ class UserPreferencesRepository @Inject constructor(
             it[TIMER_SECONDS] = s
         }
     }
+
+    // Ruler
+    val rulerDpiOffset: Flow<Float> = dataStore.data.map { it[RULER_DPI_OFFSET] ?: 0f }
+    suspend fun setRulerDpiOffset(offset: Float) { dataStore.edit { it[RULER_DPI_OFFSET] = offset } }
 }

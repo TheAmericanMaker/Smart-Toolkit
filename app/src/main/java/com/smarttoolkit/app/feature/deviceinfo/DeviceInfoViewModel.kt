@@ -15,9 +15,11 @@ import javax.inject.Inject
 import kotlin.math.sqrt
 
 data class DeviceInfoItem(val label: String, val value: String)
+data class DeviceInfoSection(val title: String, val items: List<DeviceInfoItem>)
 
 data class DeviceInfoUiState(
-    val items: List<DeviceInfoItem> = emptyList()
+    val items: List<DeviceInfoItem> = emptyList(),
+    val sections: List<DeviceInfoSection> = emptyList()
 )
 
 @HiltViewModel
@@ -44,7 +46,7 @@ class DeviceInfoViewModel @Inject constructor(
 
         val totalRamGb = "%.1f GB".format(memInfo.totalMem / (1024.0 * 1024 * 1024))
 
-        _uiState.value = DeviceInfoUiState(listOf(
+        val allItems = listOf(
             DeviceInfoItem("Model", Build.MODEL),
             DeviceInfoItem("Manufacturer", Build.MANUFACTURER),
             DeviceInfoItem("Brand", Build.BRAND),
@@ -61,6 +63,23 @@ class DeviceInfoViewModel @Inject constructor(
             DeviceInfoItem("Screen Resolution", "${dm.widthPixels} x ${dm.heightPixels}"),
             DeviceInfoItem("Screen Density", "${dm.densityDpi} dpi (${dm.density}x)"),
             DeviceInfoItem("Screen Size", "%.1f\"".format(diagonalInches))
-        ))
+        )
+
+        val sections = listOf(
+            DeviceInfoSection("Device", allItems.filter {
+                it.label in listOf("Model", "Manufacturer", "Brand", "Device", "Product")
+            }),
+            DeviceInfoSection("Software", allItems.filter {
+                it.label in listOf("Android Version", "API Level", "Security Patch", "Build Number")
+            }),
+            DeviceInfoSection("Hardware", allItems.filter {
+                it.label in listOf("Hardware", "Board", "CPU Cores", "Total RAM")
+            }),
+            DeviceInfoSection("Display", allItems.filter {
+                it.label in listOf("Screen Resolution", "Screen Density", "Screen Size")
+            })
+        )
+
+        _uiState.value = DeviceInfoUiState(items = allItems, sections = sections)
     }
 }

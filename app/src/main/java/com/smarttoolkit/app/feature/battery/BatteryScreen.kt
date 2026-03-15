@@ -1,6 +1,7 @@
 package com.smarttoolkit.app.feature.battery
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
@@ -44,7 +46,11 @@ fun BatteryScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val primary = MaterialTheme.colorScheme.primary
+            val arcColor = when {
+                state.percentage > 50 -> Color(0xFF4CAF50)
+                state.percentage > 20 -> Color(0xFFFFC107)
+                else -> Color(0xFFF44336)
+            }
             val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
 
             Canvas(modifier = Modifier.size(160.dp)) {
@@ -58,7 +64,7 @@ fun BatteryScreen(
                     style = Stroke(stroke, cap = StrokeCap.Round)
                 )
                 drawArc(
-                    color = primary,
+                    color = arcColor,
                     startAngle = 135f, sweepAngle = 270f * state.percentage / 100f,
                     useCenter = false,
                     topLeft = Offset(stroke / 2, stroke / 2),
@@ -73,7 +79,7 @@ fun BatteryScreen(
 
             val items = listOf(
                 "Plugged" to state.plugged,
-                "Temperature" to "%.1f°C".format(state.temperature),
+                "Temperature" to state.temperatureDisplay,
                 "Voltage" to "${state.voltage} mV",
                 "Health" to state.health,
                 "Technology" to state.technology
@@ -83,11 +89,26 @@ fun BatteryScreen(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (label == "Temperature") Modifier.clickable { viewModel.toggleTemperatureUnit() }
+                                else Modifier
+                            )
+                            .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(label, style = MaterialTheme.typography.bodyLarge)
-                        Text(value, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                        Row {
+                            Text(value, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                            if (label == "Temperature") {
+                                Text(
+                                    "  tap to switch",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
                 }
             }

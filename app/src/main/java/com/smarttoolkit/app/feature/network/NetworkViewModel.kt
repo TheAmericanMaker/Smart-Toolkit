@@ -7,10 +7,15 @@ import android.net.wifi.WifiManager
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.net.Inet4Address
+import java.net.InetAddress
 import java.net.NetworkInterface
 import javax.inject.Inject
 
@@ -20,7 +25,9 @@ data class NetworkUiState(
     val ipAddress: String = "N/A",
     val wifiSignalStrength: Int = 0,
     val linkSpeed: String = "N/A",
-    val frequency: String = "N/A"
+    val frequency: String = "N/A",
+    val pingResult: String = "",
+    val isPinging: Boolean = false
 )
 
 @HiltViewModel
@@ -66,6 +73,23 @@ class NetworkViewModel @Inject constructor(
             linkSpeed = linkSpd,
             frequency = freq
         )
+    }
+
+    fun ping() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isPinging = true, pingResult = "")
+            val result = withContext(Dispatchers.IO) {
+                try {
+                    val start = System.currentTimeMillis()
+                    val reachable = InetAddress.getByName("8.8.8.8").isReachable(5000)
+                    val elapsed = System.currentTimeMillis() - start
+                    if (reachable) "${elapsed}ms" else "Unreachable"
+                } catch (e: Exception) {
+                    "Failed: ${e.message}"
+                }
+            }
+            _uiState.value = _uiState.value.copy(isPinging = false, pingResult = result)
+        }
     }
 
     private fun getIpAddress(): String {
