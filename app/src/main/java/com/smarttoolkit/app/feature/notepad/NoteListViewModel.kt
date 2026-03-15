@@ -72,7 +72,14 @@ class NoteListViewModel @Inject constructor(
     }
 
     fun deleteNote(note: NoteEntity) {
+        // If there's already a pending delete, commit it immediately
+        val previousPending = pendingDelete.value
         deleteJob?.cancel()
+        if (previousPending != null) {
+            viewModelScope.launch {
+                repository.deleteNote(previousPending.id)
+            }
+        }
         pendingDelete.value = note
         deleteJob = viewModelScope.launch {
             delay(5000)
