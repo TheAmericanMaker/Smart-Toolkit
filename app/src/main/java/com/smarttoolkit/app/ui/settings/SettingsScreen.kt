@@ -92,14 +92,14 @@ fun SettingsScreen(
             )
             val uriHandler = LocalUriHandler.current
             val linkText = buildAnnotatedString {
-                pushStringAnnotation(tag = "URL", annotation = "https://midmichiganmfg.com")
+                pushStringAnnotation(tag = "URL", annotation = "https://www.youtube.com/@AmericanMaking")
                 withStyle(
                     SpanStyle(
                         color = MaterialTheme.colorScheme.primary,
                         textDecoration = TextDecoration.Underline
                     )
                 ) {
-                    append("midmichiganmfg.com")
+                    append("https://www.youtube.com/@AmericanMaking")
                 }
                 pop()
             }
