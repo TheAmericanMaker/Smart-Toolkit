@@ -12,6 +12,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.smarttoolkit.app.navigation.NavGraph
 import com.smarttoolkit.app.ui.settings.SettingsViewModel
+import com.smarttoolkit.app.ui.theme.AppColorTheme
 import com.smarttoolkit.app.ui.theme.SmartToolkitTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,8 +32,9 @@ class MainActivity : ComponentActivity() {
             val systemDark = isSystemInDarkTheme()
 
             val darkTheme = if (settingsState.useSystemTheme) systemDark else settingsState.darkMode
+            val colorTheme = AppColorTheme.fromName(settingsState.colorTheme)
 
-            SmartToolkitTheme(darkTheme = darkTheme) {
+            SmartToolkitTheme(darkTheme = darkTheme, colorTheme = colorTheme) {
                 val navController = rememberNavController()
                 NavGraph(navController = navController, pendingRoute = pendingNavigationRoute)
             }

@@ -10,31 +10,27 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Blue80,
-    secondary = BlueGrey80,
-    tertiary = Teal80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Blue40,
-    secondary = BlueGrey40,
-    tertiary = Teal40
-)
-
 @Composable
 fun SmartToolkitTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    colorTheme: AppColorTheme = AppColorTheme.DYNAMIC,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        colorTheme == AppColorTheme.DYNAMIC && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> darkColorScheme(
+            primary = colorTheme.primaryDark,
+            secondary = colorTheme.secondaryDark,
+            tertiary = colorTheme.tertiaryDark
+        )
+        else -> lightColorScheme(
+            primary = colorTheme.primaryLight,
+            secondary = colorTheme.secondaryLight,
+            tertiary = colorTheme.tertiaryLight
+        )
     }
 
     MaterialTheme(

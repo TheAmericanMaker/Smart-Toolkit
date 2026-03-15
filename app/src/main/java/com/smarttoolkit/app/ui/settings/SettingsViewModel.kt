@@ -13,7 +13,8 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val useSystemTheme: Boolean = true,
-    val darkMode: Boolean = false
+    val darkMode: Boolean = false,
+    val colorTheme: String = "DYNAMIC"
 )
 
 @HiltViewModel
@@ -23,9 +24,10 @@ class SettingsViewModel @Inject constructor(
 
     val uiState: StateFlow<SettingsUiState> = combine(
         preferencesRepository.useSystemTheme,
-        preferencesRepository.darkMode
-    ) { useSystem, dark ->
-        SettingsUiState(useSystemTheme = useSystem, darkMode = dark)
+        preferencesRepository.darkMode,
+        preferencesRepository.colorTheme
+    ) { useSystem, dark, colorTheme ->
+        SettingsUiState(useSystemTheme = useSystem, darkMode = dark, colorTheme = colorTheme)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
     fun setUseSystemTheme(enabled: Boolean) {
@@ -34,5 +36,9 @@ class SettingsViewModel @Inject constructor(
 
     fun setDarkMode(enabled: Boolean) {
         viewModelScope.launch { preferencesRepository.setDarkMode(enabled) }
+    }
+
+    fun setColorTheme(theme: String) {
+        viewModelScope.launch { preferencesRepository.setColorTheme(theme) }
     }
 }
