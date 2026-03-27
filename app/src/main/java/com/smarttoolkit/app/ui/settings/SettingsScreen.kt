@@ -1,5 +1,6 @@
 package com.smarttoolkit.app.ui.settings
 
+import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,6 +23,8 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -32,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
@@ -42,6 +46,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttoolkit.app.data.billing.BillingState
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 import com.smarttoolkit.app.ui.theme.AppColorTheme
 
@@ -52,6 +57,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = { UtilityTopBar(title = "Settings", onBack = onBack) }
@@ -142,6 +148,55 @@ fun SettingsScreen(
                     modifier = Modifier.padding(end = 8.dp)
                 )
                 Text("User Guide")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Text("Purchases", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            if (state.adsRemoved) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.WorkspacePremium,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Column {
+                        Text("Ads Removed", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "Thank you for your support!",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                Button(
+                    onClick = { viewModel.purchaseRemoveAds(context as Activity) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = state.billingState !is BillingState.Pending
+                ) {
+                    Icon(
+                        Icons.Filled.WorkspacePremium,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        if (state.billingState is BillingState.Pending) "Purchase Pending..."
+                        else "Remove Ads  \u2013  \$1.99"
+                    )
+                }
+                if (state.billingState is BillingState.Error) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Purchase failed. Please try again.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

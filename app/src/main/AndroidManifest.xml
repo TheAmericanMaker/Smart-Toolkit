@@ -28,11 +28,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartToolkit">
 
-        <!-- AdMob App ID - Temporarily disabled for testing
+        <!-- AdMob App ID (replace with real ID before release) -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />
-        -->
 
         <provider
             android:name="androidx.core.content.FileProvider"
