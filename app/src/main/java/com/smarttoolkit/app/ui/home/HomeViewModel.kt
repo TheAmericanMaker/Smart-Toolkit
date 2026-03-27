@@ -17,7 +17,8 @@ import javax.inject.Inject
 data class HomeUiState(
     val utilities: List<UtilityItem> = allUtilities,
     val favorites: List<String> = emptyList(),
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val adsRemoved: Boolean = false
 ) {
     val filteredUtilities: List<UtilityItem>
         get() = if (searchQuery.isBlank()) utilities
@@ -39,12 +40,14 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeUiState> = combine(
         preferencesRepository.favorites,
-        _searchQuery
-    ) { favorites, query ->
+        _searchQuery,
+        preferencesRepository.adsRemoved
+    ) { favorites, query, adsRemoved ->
         HomeUiState(
             utilities = allUtilities,
             favorites = favorites,
-            searchQuery = query
+            searchQuery = query,
+            adsRemoved = adsRemoved
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState())
 

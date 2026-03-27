@@ -103,8 +103,11 @@ dependencies {
     // Coroutines
     implementation(libs.coroutines.android)
 
-    // Ads - Temporarily disabled for testing
-    // implementation(libs.play.services.ads)
+    // Ads
+    implementation(libs.play.services.ads)
+
+    // Billing
+    implementation(libs.billing)
 
     // Testing
     testImplementation(libs.junit)

@@ -34,6 +34,7 @@ class UserPreferencesRepository @Inject constructor(
         val TIMER_SECONDS = intPreferencesKey("timer_seconds")
         val RULER_DPI_OFFSET = floatPreferencesKey("ruler_dpi_offset")
         val TIMER_ALARM_SOUND = stringPreferencesKey("timer_alarm_sound")
+        val ADS_REMOVED = booleanPreferencesKey("ads_removed")
     }
 
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
@@ -44,6 +45,9 @@ class UserPreferencesRepository @Inject constructor(
     }
 
     val ocrHintShown: Flow<Boolean> = dataStore.data.map { it[OCR_HINT_SHOWN] ?: false }
+    val adsRemoved: Flow<Boolean> = dataStore.data.map { it[ADS_REMOVED] ?: false }
+
+    suspend fun setAdsRemoved(removed: Boolean) { dataStore.edit { it[ADS_REMOVED] = removed } }
 
     suspend fun setOcrHintShown() {
         dataStore.edit { it[OCR_HINT_SHOWN] = true }
