@@ -185,6 +185,13 @@ private fun SoundMeterContent(viewModel: SoundMeterViewModel) {
                 Text("Max", style = MaterialTheme.typography.labelMedium)
                 Text("%.0f dB".format(state.maxDb), fontFamily = FontFamily.Monospace)
             }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Avg", style = MaterialTheme.typography.labelMedium)
+                Text(
+                    if (state.avgDb == 0.0 && !state.isRecording) "--" else "%.0f dB".format(state.avgDb),
+                    fontFamily = FontFamily.Monospace
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))

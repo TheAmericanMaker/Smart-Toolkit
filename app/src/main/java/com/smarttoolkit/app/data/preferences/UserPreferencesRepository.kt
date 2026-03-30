@@ -34,7 +34,13 @@ class UserPreferencesRepository @Inject constructor(
         val TIMER_SECONDS = intPreferencesKey("timer_seconds")
         val RULER_DPI_OFFSET = floatPreferencesKey("ruler_dpi_offset")
         val TIMER_ALARM_SOUND = stringPreferencesKey("timer_alarm_sound")
+        val TIMER_REPEAT = booleanPreferencesKey("timer_repeat")
         val ADS_REMOVED = booleanPreferencesKey("ads_removed")
+
+        // Stopwatch persistence
+        val STOPWATCH_ACCUMULATED_MS = stringPreferencesKey("stopwatch_accumulated_ms")
+        val STOPWATCH_LAST_LAP_MS = stringPreferencesKey("stopwatch_last_lap_ms")
+        val STOPWATCH_LAPS_JSON = stringPreferencesKey("stopwatch_laps_json")
     }
 
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
@@ -123,7 +129,30 @@ class UserPreferencesRepository @Inject constructor(
     val timerAlarmSound: Flow<String> = dataStore.data.map { it[TIMER_ALARM_SOUND] ?: "" }
     suspend fun setTimerAlarmSound(uri: String) { dataStore.edit { it[TIMER_ALARM_SOUND] = uri } }
 
+    // Timer repeat
+    val timerRepeat: Flow<Boolean> = dataStore.data.map { it[TIMER_REPEAT] ?: false }
+    suspend fun setTimerRepeat(enabled: Boolean) { dataStore.edit { it[TIMER_REPEAT] = enabled } }
+
     // Ruler
     val rulerDpiOffset: Flow<Float> = dataStore.data.map { it[RULER_DPI_OFFSET] ?: 0f }
     suspend fun setRulerDpiOffset(offset: Float) { dataStore.edit { it[RULER_DPI_OFFSET] = offset } }
+
+    // Stopwatch
+    val stopwatchAccumulatedMs: Flow<Long> = dataStore.data.map { (it[STOPWATCH_ACCUMULATED_MS] ?: "0").toLongOrNull() ?: 0L }
+    val stopwatchLastLapMs: Flow<Long> = dataStore.data.map { (it[STOPWATCH_LAST_LAP_MS] ?: "0").toLongOrNull() ?: 0L }
+    val stopwatchLapsJson: Flow<String> = dataStore.data.map { it[STOPWATCH_LAPS_JSON] ?: "" }
+    suspend fun saveStopwatchState(accumulatedMs: Long, lastLapMs: Long, lapsJson: String) {
+        dataStore.edit {
+            it[STOPWATCH_ACCUMULATED_MS] = accumulatedMs.toString()
+            it[STOPWATCH_LAST_LAP_MS] = lastLapMs.toString()
+            it[STOPWATCH_LAPS_JSON] = lapsJson
+        }
+    }
+    suspend fun clearStopwatchState() {
+        dataStore.edit {
+            it.remove(STOPWATCH_ACCUMULATED_MS)
+            it.remove(STOPWATCH_LAST_LAP_MS)
+            it.remove(STOPWATCH_LAPS_JSON)
+        }
+    }
 }

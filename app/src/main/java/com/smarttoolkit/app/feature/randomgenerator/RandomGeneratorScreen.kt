@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smarttoolkit.app.data.db.HistoryEntry
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 import com.smarttoolkit.app.ui.util.rememberHaptic
 
@@ -54,6 +55,7 @@ fun RandomGeneratorScreen(
     viewModel: RandomGeneratorViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
     val haptic = rememberHaptic()
     var showHistory by rememberSaveable { mutableStateOf(false) }
 
@@ -63,7 +65,7 @@ fun RandomGeneratorScreen(
                 title = "Random Generator",
                 onBack = onBack,
                 actions = {
-                    if (state.history.isNotEmpty()) {
+                    if (history.isNotEmpty()) {
                         IconButton(onClick = { showHistory = !showHistory }) {
                             Icon(Icons.Filled.History, contentDescription = "History")
                         }
@@ -79,8 +81,9 @@ fun RandomGeneratorScreen(
         ) {
             if (showHistory) {
                 HistoryPanel(
-                    history = state.history,
+                    history = history,
                     onClear = { viewModel.clearHistory(); showHistory = false },
+                    onDelete = { viewModel.deleteHistoryEntry(it) },
                     onBack = { showHistory = false }
                 )
             } else {
@@ -136,21 +139,35 @@ fun RandomGeneratorScreen(
                                 Text("!@#")
                             }
                         }
+                        RandomMode.SHUFFLE -> {
+                            OutlinedTextField(
+                                value = state.shuffleInput,
+                                onValueChange = viewModel::setShuffleInput,
+                                label = { Text("Items (one per line or comma-separated)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                minLines = 3,
+                                maxLines = 8
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    OutlinedTextField(
-                        value = state.batchCount,
-                        onValueChange = viewModel::setBatchCount,
-                        label = { Text("Count") },
-                        modifier = Modifier.width(100.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true
-                    )
+                    if (state.mode != RandomMode.SHUFFLE) {
+                        OutlinedTextField(
+                            value = state.batchCount,
+                            onValueChange = viewModel::setBatchCount,
+                            label = { Text("Count") },
+                            modifier = Modifier.width(100.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { haptic(); viewModel.generate() }) { Text("Generate") }
+                    Button(
+                        onClick = { haptic(); viewModel.generate() }
+                    ) { Text(if (state.mode == RandomMode.SHUFFLE) "Shuffle" else "Generate") }
                     Spacer(modifier = Modifier.height(24.dp))
 
                     if (state.result.isNotEmpty()) {
@@ -179,8 +196,9 @@ fun RandomGeneratorScreen(
 
 @Composable
 private fun HistoryPanel(
-    history: List<String>,
+    history: List<HistoryEntry>,
     onClear: () -> Unit,
+    onDelete: (Long) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -208,7 +226,7 @@ private fun HistoryPanel(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
         ) {
-            history.forEachIndexed { index, item ->
+            history.forEachIndexed { index, entry ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -217,7 +235,7 @@ private fun HistoryPanel(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        item,
+                        entry.label,
                         style = MaterialTheme.typography.bodyMedium,
                         fontFamily = FontFamily.Monospace,
                         maxLines = 1,
@@ -226,7 +244,7 @@ private fun HistoryPanel(
                     )
                     IconButton(onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("generated", item))
+                        clipboard.setPrimaryClip(ClipData.newPlainText("generated", entry.value))
                     }) {
                         Icon(Icons.Filled.ContentCopy, contentDescription = "Copy", modifier = Modifier.padding(start = 4.dp))
                     }

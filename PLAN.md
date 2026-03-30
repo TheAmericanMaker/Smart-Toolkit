@@ -4,35 +4,35 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 
 ---
 
-## Phase 1: Cross-Cutting Improvements — ~80% COMPLETE
+## Phase 1: Cross-Cutting Improvements — ✅ ~95% COMPLETE
 
-1. **Session persistence for stateful tools**
+1. **Session persistence for stateful tools** — ✅ COMPLETE
    - ✅ Tally Counter — persists via DataStore
    - ✅ Timer — persists config via DataStore
-   - ❌ Stopwatch — state lost on navigation (in-memory only)
+   - ✅ Stopwatch — persists accumulated time and laps via DataStore
 
 2. **Haptic feedback** — ✅ COMPLETE
    - ✅ Calculator, Timer, Stopwatch, Random Generator, Tally Counter all have haptic feedback
 
 3. **History / recent results**
    - ✅ Calculator — Room-backed, scrollable, clickable to reuse
-   - ✅ Random Generator — in-memory history (up to 50), not persisted to DB
-   - ❌ Unit Converter — no history
-   - ❌ Tip Calculator — no history
+   - ✅ Random Generator — Room-backed persistent history
+   - ✅ Unit Converter — Room-backed history with toggle panel
+   - ❌ Tip Calculator — no history (low priority, tips are ephemeral)
 
 ---
 
-## Phase 2: Sensor & Hardware Tools — ~73% COMPLETE
+## Phase 2: Sensor & Hardware Tools — ~85% COMPLETE
 
 4. **Stopwatch** — ✅ COMPLETE
    - ✅ Lap deletion (swipe-to-dismiss)
    - ✅ Export laps to clipboard
    - ✅ Background persistence via foreground service notification
 
-5. **Timer** — ⚠️ PARTIAL
+5. **Timer** — ✅ COMPLETE
    - ✅ Quick-select presets (1m, 3m, 5m, 10m, 15m, 30m)
    - ✅ Persistent countdown notification via foreground service
-   - ❌ Repeat timer option
+   - ✅ Repeat timer option (toggle in config, auto-restarts with brief alarm)
 
 6. **Compass** — ⚠️ PARTIAL
    - ✅ Accuracy indicator (color-coded HIGH/MEDIUM/LOW/UNRELIABLE)
@@ -42,7 +42,7 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 7. **Sound Meter** — ⚠️ PARTIAL
    - ✅ Min/max tracking with display
    - ✅ Scrolling history chart (Canvas-based waveform, last 100 readings)
-   - ❌ Average (avg) tracking
+   - ✅ Average (avg) tracking with real-time display and CSV export
    - ❌ Calibration offset setting
 
 8. **Bubble Level** — ✅ COMPLETE
@@ -70,7 +70,7 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 
 ---
 
-## Phase 4: Computational Tools — ~85% COMPLETE
+## Phase 4: Computational Tools — ~95% COMPLETE
 
 12. **Calculator** — ✅ COMPLETE
     - ✅ Scrollable expression history (Room-persisted)
@@ -78,10 +78,11 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
     - ✅ Percentage button
     - ✅ Scientific calculator toggle
 
-13. **Unit Converter** — ⚠️ PARTIAL
+13. **Unit Converter** — ✅ MOSTLY COMPLETE
     - ✅ Persist last-used category and units (DataStore)
     - ✅ Swap from/to units
-    - ❌ Favorites/recent conversions list
+    - ✅ Conversion history (Room-backed, toggle panel in top bar)
+    - ❌ Favorites/pinned conversions (low priority)
 
 14. **Text Tools** — ✅ COMPLETE
     - ✅ Find & replace with match count
@@ -90,10 +91,10 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
     - ✅ Sort lines
     - ✅ Bonus: uppercase, lowercase, title case, reverse, trim
 
-15. **Random Generator** — ⚠️ PARTIAL
-    - ✅ Generation history (in-memory, 50 items)
+15. **Random Generator** — ✅ COMPLETE
+    - ✅ Generation history (Room-backed, persistent)
     - ✅ Batch generate (configurable count 1-100)
-    - ❌ List shuffler mode
+    - ✅ List shuffler mode (SHUFFLE tab, comma/newline input)
 
 16. **Tip Calculator** — ✅ COMPLETE
     - ✅ Rounding options (none, round total, round per person)
@@ -124,11 +125,10 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
     - ✅ Donut chart visualization (Canvas-based arc)
     - ✅ Used, available, total display
 
-21. **Flashlight** — ⚠️ NEARLY COMPLETE
+21. **Flashlight** — ✅ COMPLETE
     - ✅ SOS mode (Morse code pattern)
-    - ✅ Strobe mode
+    - ✅ Strobe mode with adjustable speed (50-500ms slider)
     - ✅ Foreground service for persistent control
-    - ❌ Adjustable strobe speed (hardcoded at 100ms)
 
 22. **Ruler** — ✅ COMPLETE
     - ✅ Calibration flow with DPI offset
@@ -145,22 +145,14 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 
 ## Remaining Work (all ❌ items above)
 
-### Quick wins (small scope):
-- Repeat timer option
-- Sound Meter average tracking
-- Flashlight adjustable strobe speed
-- Random Generator list shuffler
-
 ### Medium effort:
-- Stopwatch session persistence
 - Compass true north toggle with declination
 - Sound Meter calibration offset
-- Unit Converter favorites/recent list
 - Magnifying Glass freeze/capture
 - Color Picker: pick from gallery, color name lookup
 - Network connection history log
 - Tally Counter named counters
-- Random Generator history persistence (Room)
+- Device Info search/filter
 
 ### Larger features:
 - QR Code generation

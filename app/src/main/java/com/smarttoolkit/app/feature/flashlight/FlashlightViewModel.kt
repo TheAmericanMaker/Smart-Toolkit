@@ -14,7 +14,8 @@ enum class FlashMode { STEADY, SOS, STROBE }
 data class FlashlightUiState(
     val isOn: Boolean = false,
     val isAvailable: Boolean = true,
-    val mode: FlashMode = FlashMode.STEADY
+    val mode: FlashMode = FlashMode.STEADY,
+    val strobeDelayMs: Long = 100L
 )
 
 @HiltViewModel
@@ -49,6 +50,10 @@ class FlashlightViewModel @Inject constructor(
         if (wasOn && stateHolder.uiState.value.isOn) {
             // Service is running, it will pick up the state change via observation
         }
+    }
+
+    fun setStrobeSpeed(delayMs: Long) {
+        stateHolder.setStrobeDelay(delayMs)
     }
 
     override fun onCleared() {

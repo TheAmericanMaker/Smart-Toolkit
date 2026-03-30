@@ -28,6 +28,7 @@ data class SoundMeterUiState(
     val currentDb: Double = 0.0,
     val minDb: Double = Double.MAX_VALUE,
     val maxDb: Double = 0.0,
+    val avgDb: Double = 0.0,
     val isRecording: Boolean = false,
     val dbHistory: List<Double> = emptyList(),
     val timestampedHistory: List<SoundMeterEntry> = emptyList()
@@ -41,6 +42,8 @@ class SoundMeterViewModel @Inject constructor() : ViewModel() {
 
     private var recordingJob: Job? = null
     private var audioRecord: AudioRecord? = null
+    private var dbSum: Double = 0.0
+    private var sampleCount: Int = 0
 
     @SuppressLint("MissingPermission")
     fun startRecording() {
@@ -64,6 +67,8 @@ class SoundMeterViewModel @Inject constructor() : ViewModel() {
         }
 
         audioRecord?.startRecording()
+        dbSum = 0.0
+        sampleCount = 0
         _uiState.value = SoundMeterUiState(isRecording = true)
 
         recordingJob = viewModelScope.launch(Dispatchers.IO) {
@@ -83,10 +88,13 @@ class SoundMeterViewModel @Inject constructor() : ViewModel() {
                     val history = (current.dbHistory + clampedDb).takeLast(100)
                     val entry = SoundMeterEntry(System.currentTimeMillis(), clampedDb)
                     val timestamped = current.timestampedHistory + entry
+                    dbSum += clampedDb
+                    sampleCount++
                     _uiState.value = current.copy(
                         currentDb = clampedDb,
                         minDb = minOf(current.minDb, clampedDb),
                         maxDb = maxOf(current.maxDb, clampedDb),
+                        avgDb = dbSum / sampleCount,
                         dbHistory = history,
                         timestampedHistory = timestamped
                     )
@@ -107,6 +115,7 @@ class SoundMeterViewModel @Inject constructor() : ViewModel() {
         sb.appendLine("Summary")
         sb.appendLine("Min dB,%.1f".format(if (state.minDb == Double.MAX_VALUE) 0.0 else state.minDb))
         sb.appendLine("Max dB,%.1f".format(state.maxDb))
+        sb.appendLine("Avg dB,%.1f".format(state.avgDb))
         sb.appendLine("Samples,${state.timestampedHistory.size}")
         return sb.toString()
     }

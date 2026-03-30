@@ -40,6 +40,9 @@ class TimerForegroundService : Service() {
     private var countdownJob: Job? = null
     private var activeRingtone: Ringtone? = null
     private var autoDismissJob: Job? = null
+    private var repeatEnabled: Boolean = false
+    private var lastDurationMs: Long = 0L
+    private var lastAlarmUri: String = ""
 
     private val notificationManager by lazy {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -57,6 +60,9 @@ class TimerForegroundService : Service() {
             ACTION_START -> {
                 val durationMs = intent.getLongExtra(EXTRA_DURATION_MS, 0L)
                 val alarmUri = intent.getStringExtra(EXTRA_ALARM_URI) ?: ""
+                repeatEnabled = intent.getBooleanExtra(EXTRA_REPEAT, false)
+                lastDurationMs = durationMs
+                lastAlarmUri = alarmUri
                 if (durationMs > 0) {
                     startTimer(durationMs, alarmUri)
                 }
@@ -160,6 +166,17 @@ class TimerForegroundService : Service() {
     }
 
     private fun onTimerFinished(alarmUri: String) {
+        if (repeatEnabled && lastDurationMs > 0) {
+            // Repeat: brief alarm then restart
+            playAlarm(alarmUri)
+            serviceScope.launch {
+                delay(3000L) // Play alarm for 3 seconds
+                stopAlarmPlayback()
+                startTimer(lastDurationMs, lastAlarmUri)
+            }
+            return
+        }
+
         // Remove the countdown notification
         notificationManager.cancel(COUNTDOWN_NOTIFICATION_ID)
 
@@ -340,6 +357,7 @@ class TimerForegroundService : Service() {
 
         const val EXTRA_DURATION_MS = "duration_ms"
         const val EXTRA_ALARM_URI = "alarm_uri"
+        const val EXTRA_REPEAT = "repeat"
         const val EXTRA_NAVIGATE_TO = "navigate_to"
 
         const val COUNTDOWN_NOTIFICATION_ID = 1001
