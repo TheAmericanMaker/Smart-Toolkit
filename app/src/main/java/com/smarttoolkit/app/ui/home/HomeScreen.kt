@@ -54,10 +54,8 @@ fun HomeScreen(
     val gridState = rememberLazyGridState()
 
     // Scroll to top (favorites) when the screen first loads
-    LaunchedEffect(state.favoriteUtilities.isNotEmpty()) {
-        if (state.favoriteUtilities.isNotEmpty()) {
-            gridState.animateScrollToItem(0)
-        }
+    LaunchedEffect(Unit) {
+        gridState.scrollToItem(0)
     }
 
     if (showReorderDialog) {

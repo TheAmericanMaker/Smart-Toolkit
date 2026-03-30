@@ -164,18 +164,23 @@ fun NoteEditScreen(
 
     // Camera capture
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+    var cameraTempFile by remember { mutableStateOf<File?>(null) }
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
             cameraImageUri?.let { viewModel.addImageFromUri(it) }
         }
+        // Clean up temp file after processing
+        cameraTempFile?.delete()
+        cameraTempFile = null
     }
 
-    val launchCamera: () -> Unit = {
-        val cacheDir = File(context.cacheDir, "camera_temp")
-        cacheDir.mkdirs()
-        val tempFile = File(cacheDir, "photo_${System.currentTimeMillis()}.jpg")
+    val launchCameraInternal: () -> Unit = {
+        val tempDir = File(context.cacheDir, "camera_temp")
+        tempDir.mkdirs()
+        val tempFile = File(tempDir, "photo_${System.currentTimeMillis()}.jpg")
+        cameraTempFile = tempFile
         val uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
@@ -183,6 +188,19 @@ fun NoteEditScreen(
         )
         cameraImageUri = uri
         cameraLauncher.launch(uri)
+    }
+
+    // Camera permission handling
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            launchCameraInternal()
+        }
+    }
+
+    val launchCamera: () -> Unit = {
+        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
     }
 
     var dictationTarget by remember { mutableStateOf("content") }
