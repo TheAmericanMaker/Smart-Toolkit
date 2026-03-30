@@ -101,6 +101,7 @@ class NoteExportImportManager @Inject constructor(
             noteJson.put("type", note.type.name)
             noteJson.put("category", note.category ?: JSONObject.NULL)
             noteJson.put("isPinned", note.isPinned)
+            noteJson.put("iconStyle", note.iconStyle)
             noteJson.put("createdAt", note.createdAt)
             noteJson.put("updatedAt", note.updatedAt)
 
@@ -111,6 +112,7 @@ class NoteExportImportManager @Inject constructor(
                     itemJson.put("text", item.text)
                     itemJson.put("isChecked", item.isChecked)
                     itemJson.put("position", item.position)
+                    itemJson.put("indentLevel", item.indentLevel)
                     itemsArray.put(itemJson)
                 }
                 noteJson.put("checklistItems", itemsArray)
@@ -159,7 +161,8 @@ class NoteExportImportManager @Inject constructor(
                         ChecklistItem(
                             text = itemJson.getString("text"),
                             isChecked = itemJson.getBoolean("isChecked"),
-                            position = itemJson.getInt("position")
+                            position = itemJson.getInt("position"),
+                            indentLevel = itemJson.optInt("indentLevel", 0)
                         )
                     )
                 }
@@ -177,6 +180,7 @@ class NoteExportImportManager @Inject constructor(
                 type = type,
                 category = if (noteJson.isNull("category")) null else noteJson.optString("category"),
                 isPinned = noteJson.optBoolean("isPinned", false),
+                iconStyle = noteJson.optString("iconStyle", "CHECKBOX"),
                 checklistItems = checklistItems,
                 createdAt = noteJson.optLong("createdAt", System.currentTimeMillis()),
                 updatedAt = noteJson.optLong("updatedAt", System.currentTimeMillis())

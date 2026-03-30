@@ -35,7 +35,8 @@ data class ChecklistItemUiState(
     val id: Long = 0,
     val tempId: String = UUID.randomUUID().toString(),
     val text: String = "",
-    val isChecked: Boolean = false
+    val isChecked: Boolean = false,
+    val indentLevel: Int = 0
 )
 
 data class NoteImageUiState(
@@ -51,6 +52,7 @@ data class NoteEditUiState(
     val category: String? = null,
     val colorLabel: String? = null,
     val isPinned: Boolean = false,
+    val iconStyle: String = "CHECKBOX",
     val checklistItems: List<ChecklistItemUiState> = emptyList(),
     val images: List<NoteImageUiState> = emptyList(),
     val isNew: Boolean = true,
@@ -97,8 +99,9 @@ class NotepadViewModel @Inject constructor(
                         category = note.category,
                         colorLabel = note.colorLabel,
                         isPinned = note.isPinned,
+                        iconStyle = note.iconStyle,
                         checklistItems = note.checklistItems.map {
-                            ChecklistItemUiState(id = it.id, text = it.text, isChecked = it.isChecked)
+                            ChecklistItemUiState(id = it.id, text = it.text, isChecked = it.isChecked, indentLevel = it.indentLevel)
                         }.ifEmpty { listOf(ChecklistItemUiState()) },
                         images = note.images.map {
                             NoteImageUiState(id = it.id, filePath = it.filePath)
@@ -145,9 +148,12 @@ class NotepadViewModel @Inject constructor(
     }
 
     fun onChecklistItemTextChange(index: Int, text: String) {
+        val capitalized = text.replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase() else it.toString()
+        }
         val items = _uiState.value.checklistItems.toMutableList()
         if (index < items.size) {
-            items[index] = items[index].copy(text = text)
+            items[index] = items[index].copy(text = capitalized)
             _uiState.value = _uiState.value.copy(checklistItems = items)
             scheduleAutoSave()
         }
@@ -165,7 +171,8 @@ class NotepadViewModel @Inject constructor(
     fun onAddChecklistItem(afterIndex: Int = -1) {
         val items = _uiState.value.checklistItems.toMutableList()
         val insertAt = if (afterIndex >= 0) afterIndex + 1 else items.size
-        val newItem = ChecklistItemUiState()
+        val inheritIndent = if (afterIndex >= 0 && afterIndex < items.size) items[afterIndex].indentLevel else 0
+        val newItem = ChecklistItemUiState(indentLevel = inheritIndent)
         items.add(insertAt, newItem)
         _uiState.value = _uiState.value.copy(checklistItems = items)
         viewModelScope.launch {
@@ -269,6 +276,7 @@ class NotepadViewModel @Inject constructor(
     fun onExtractedText(text: String) {
         val state = _uiState.value
         val lines = com.smarttoolkit.app.feature.notepad.smart.ImageTextExtractor.splitIntoItems(text)
+            .map { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase() else c.toString() } }
         if (state.type == NoteType.CHECKLIST) {
             val items = state.checklistItems.toMutableList()
             val insertBefore = items.indexOfLast { it.text.isBlank() }.takeIf { it >= 0 } ?: items.size
@@ -288,12 +296,36 @@ class NotepadViewModel @Inject constructor(
         scheduleAutoSave()
     }
 
+    fun onIconStyleChange(iconStyle: String) {
+        _uiState.value = _uiState.value.copy(iconStyle = iconStyle)
+        scheduleAutoSave()
+    }
+
+    fun onIndentItem(index: Int) {
+        val items = _uiState.value.checklistItems.toMutableList()
+        if (index < items.size && items[index].indentLevel < 1) {
+            items[index] = items[index].copy(indentLevel = items[index].indentLevel + 1)
+            _uiState.value = _uiState.value.copy(checklistItems = items)
+            scheduleAutoSave()
+        }
+    }
+
+    fun onOutdentItem(index: Int) {
+        val items = _uiState.value.checklistItems.toMutableList()
+        if (index < items.size && items[index].indentLevel > 0) {
+            items[index] = items[index].copy(indentLevel = items[index].indentLevel - 1)
+            _uiState.value = _uiState.value.copy(checklistItems = items)
+            scheduleAutoSave()
+        }
+    }
+
     fun onDictatedText(text: String) {
         val state = _uiState.value
         if (state.type == NoteType.CHECKLIST) {
             val lines = text.split(Regex("[.\\n]"))
                 .map { it.trim() }
                 .filter { it.isNotBlank() }
+                .map { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase() else c.toString() } }
             val items = state.checklistItems.toMutableList()
             val insertAt = items.indexOfLast { it.text.isBlank() }.takeIf { it >= 0 } ?: items.size
             lines.forEach { line ->
@@ -344,8 +376,9 @@ class NotepadViewModel @Inject constructor(
                 category = state.category,
                 colorLabel = state.colorLabel,
                 isPinned = state.isPinned,
+                iconStyle = state.iconStyle,
                 checklistItems = state.checklistItems.mapIndexed { index, item ->
-                    ChecklistItem(text = item.text, isChecked = item.isChecked, position = index)
+                    ChecklistItem(text = item.text, isChecked = item.isChecked, position = index, indentLevel = item.indentLevel)
                 },
                 images = state.images.mapIndexed { index, img ->
                     NoteImage(id = img.id, filePath = img.filePath, position = index)

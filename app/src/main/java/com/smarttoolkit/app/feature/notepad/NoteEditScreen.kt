@@ -9,8 +9,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,14 +34,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckBox
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FormatColorReset
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -54,9 +62,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,9 +78,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.smarttoolkit.app.data.model.NoteType
 import com.smarttoolkit.app.feature.notepad.components.ChecklistItemRow
 import com.smarttoolkit.app.feature.notepad.components.FullScreenImageViewer
@@ -93,6 +107,14 @@ fun NoteEditScreen(
     var showTemplates by rememberSaveable { mutableStateOf(false) }
     var viewingImageIndex by remember { mutableIntStateOf(-1) }
     var contentFieldValue by remember { mutableStateOf(TextFieldValue(state.content)) }
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val isHeaderCollapsed by remember {
+        derivedStateOf {
+            lazyListState.firstVisibleItemIndex > 0 ||
+                (lazyListState.firstVisibleItemScrollOffset > 50 && state.checklistItems.size > 5)
+        }
+    }
 
     // Sync from ViewModel when content changes externally (template, OCR, etc.)
     LaunchedEffect(state.content) {
@@ -111,12 +133,19 @@ fun NoteEditScreen(
         }
     }
 
-    val focusRequesters = remember(state.checklistItems.size) {
-        List(state.checklistItems.size) { FocusRequester() }
+    val focusRequesters = remember { mutableStateListOf<FocusRequester>() }
+    LaunchedEffect(state.checklistItems.size) {
+        while (focusRequesters.size < state.checklistItems.size) {
+            focusRequesters.add(FocusRequester())
+        }
+        while (focusRequesters.size > state.checklistItems.size) {
+            focusRequesters.removeAt(focusRequesters.lastIndex)
+        }
     }
 
     LaunchedEffect(Unit) {
         viewModel.focusItemIndex.collect { index ->
+            delay(100)
             if (index in focusRequesters.indices) {
                 try {
                     focusRequesters[index].requestFocus()
@@ -257,107 +286,191 @@ fun NoteEditScreen(
                 .imePadding()
                 .padding(horizontal = 16.dp)
         ) {
-            // Template button for new notes
+            // Collapsible header for checklist mode
+            val showFullHeader = state.type != NoteType.CHECKLIST || !isHeaderCollapsed
+
+            // Compact header shown when collapsed
             AnimatedVisibility(
-                visible = state.isNew && state.title.isBlank() && state.content.isBlank() &&
-                    state.checklistItems.all { it.text.isBlank() }
+                visible = state.type == NoteType.CHECKLIST && isHeaderCollapsed,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
             ) {
-                TextButton(
-                    onClick = { showTemplates = true },
-                    modifier = Modifier.padding(bottom = 4.dp)
-                ) {
-                    Text("Use a template")
-                }
-            }
-
-            // Title
-            OutlinedTextField(
-                value = state.title,
-                onValueChange = viewModel::onTitleChange,
-                label = { Text("Title") },
-                trailingIcon = {
-                    IconButton(onClick = { launchDictation("title") }) {
-                        Icon(
-                            Icons.Filled.Mic,
-                            contentDescription = "Voice input for title",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            // Color picker
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // "No color" option
-                Box(
+                Row(
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .border(
-                            width = if (state.colorLabel == null) 2.dp else 1.dp,
-                            color = if (state.colorLabel == null) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.outlineVariant,
-                            shape = CircleShape
-                        )
-                        .clickable { viewModel.onColorLabelChange(null) },
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .clickable {
+                            coroutineScope.launch {
+                                lazyListState.animateScrollToItem(0)
+                            }
+                        }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    Text(
+                        text = state.title.ifBlank { "Untitled" },
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
                     Icon(
-                        Icons.Filled.FormatColorReset,
-                        contentDescription = "No color",
-                        modifier = Modifier.size(16.dp),
+                        Icons.Filled.ExpandMore,
+                        contentDescription = "Show header",
+                        modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                NoteCategorizer.noteColors.forEach { (label, color) ->
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .border(
-                                width = if (state.colorLabel == label) 2.dp else 0.dp,
-                                color = if (state.colorLabel == label) MaterialTheme.colorScheme.primary
-                                    else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .clickable { viewModel.onColorLabelChange(label) },
-                        contentAlignment = Alignment.Center
+            }
+
+            // Full header (title, colors, images)
+            AnimatedVisibility(
+                visible = showFullHeader,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column {
+                    // Template button for new notes
+                    AnimatedVisibility(
+                        visible = state.isNew && state.title.isBlank() && state.content.isBlank() &&
+                            state.checklistItems.all { it.text.isBlank() }
                     ) {
-                        if (state.colorLabel == label) {
+                        TextButton(
+                            onClick = { showTemplates = true },
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        ) {
+                            Text("Use a template")
+                        }
+                    }
+
+                    // Title
+                    OutlinedTextField(
+                        value = state.title,
+                        onValueChange = viewModel::onTitleChange,
+                        label = { Text("Title") },
+                        trailingIcon = {
+                            IconButton(onClick = { launchDictation("title") }) {
+                                Icon(
+                                    Icons.Filled.Mic,
+                                    contentDescription = "Voice input for title",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    // Color picker
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // "No color" option
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .border(
+                                    width = if (state.colorLabel == null) 2.dp else 1.dp,
+                                    color = if (state.colorLabel == null) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.outlineVariant,
+                                    shape = CircleShape
+                                )
+                                .clickable { viewModel.onColorLabelChange(null) },
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
-                                Icons.Filled.Check,
-                                contentDescription = label,
+                                Icons.Filled.FormatColorReset,
+                                contentDescription = "No color",
                                 modifier = Modifier.size(16.dp),
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                        NoteCategorizer.noteColors.forEach { (label, color) ->
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .border(
+                                        width = if (state.colorLabel == label) 2.dp else 0.dp,
+                                        color = if (state.colorLabel == label) MaterialTheme.colorScheme.primary
+                                            else Color.Transparent,
+                                        shape = CircleShape
+                                    )
+                                    .clickable { viewModel.onColorLabelChange(label) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (state.colorLabel == label) {
+                                    Icon(
+                                        Icons.Filled.Check,
+                                        contentDescription = label,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Image attachments
+                    if (state.images.isNotEmpty() || state.type != NoteType.TEXT) {
+                        ImageAttachmentRow(
+                            images = state.images,
+                            getImageFile = { viewModel.getImageFile(it) },
+                            onAddImage = {
+                                imagePickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                            onRemoveImage = { viewModel.removeImage(it) },
+                            onImageClick = { viewingImageIndex = it }
+                        )
+                    }
+
+                    // Icon style picker (checklist only)
+                    if (state.type == NoteType.CHECKLIST) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Style",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            val iconStyles = listOf(
+                                "CHECKBOX" to Icons.Filled.CheckBox,
+                                "CIRCLE" to Icons.Filled.RadioButtonUnchecked,
+                                "STAR" to Icons.Filled.Star,
+                                "HEART" to Icons.Filled.Favorite,
+                                "SQUARE" to Icons.Filled.Check
+                            )
+                            iconStyles.forEach { (style, icon) ->
+                                IconButton(
+                                    onClick = { viewModel.onIconStyleChange(style) },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = style,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = if (state.iconStyle == style) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            }
-
-            // Image attachments
-            if (state.images.isNotEmpty() || state.type != NoteType.TEXT) {
-                ImageAttachmentRow(
-                    images = state.images,
-                    getImageFile = { viewModel.getImageFile(it) },
-                    onAddImage = {
-                        imagePickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
-                    onRemoveImage = { viewModel.removeImage(it) },
-                    onImageClick = { viewingImageIndex = it }
-                )
             }
 
             when (state.type) {
@@ -435,14 +548,28 @@ fun NoteEditScreen(
                     val uncheckedItems = state.checklistItems.withIndex().filter { !it.value.isChecked }
                     val checkedItems = state.checklistItems.withIndex().filter { it.value.isChecked }
 
+                    // Compute numbering: only top-level unchecked items get numbers
+                    val topLevelNumbers = remember(uncheckedItems) {
+                        var counter = 0
+                        uncheckedItems.map { indexed ->
+                            if (indexed.value.indentLevel == 0) {
+                                counter++
+                                counter
+                            } else {
+                                null
+                            }
+                        }
+                    }
+
                     LazyColumn(
+                        state = lazyListState,
                         modifier = Modifier.weight(1f)
                     ) {
                         // Unchecked items first
                         itemsIndexed(
                             uncheckedItems,
                             key = { _, indexed -> indexed.value.tempId }
-                        ) { _, indexed ->
+                        ) { listIndex, indexed ->
                             val actualIndex = indexed.index
                             ChecklistItemRow(
                                 text = indexed.value.text,
@@ -452,7 +579,12 @@ fun NoteEditScreen(
                                 onEnterPressed = { viewModel.onAddChecklistItem(actualIndex) },
                                 onDelete = { viewModel.onDeleteChecklistItem(actualIndex) },
                                 canDelete = state.checklistItems.size > 1,
-                                focusRequester = if (actualIndex < focusRequesters.size) focusRequesters[actualIndex] else FocusRequester()
+                                focusRequester = if (actualIndex < focusRequesters.size) focusRequesters[actualIndex] else FocusRequester(),
+                                indentLevel = indexed.value.indentLevel,
+                                itemNumber = topLevelNumbers.getOrNull(listIndex),
+                                iconStyle = state.iconStyle,
+                                onIndent = { viewModel.onIndentItem(actualIndex) },
+                                onOutdent = { viewModel.onOutdentItem(actualIndex) }
                             )
                         }
 
@@ -511,7 +643,9 @@ fun NoteEditScreen(
                                     onEnterPressed = {},
                                     onDelete = { viewModel.onDeleteChecklistItem(actualIndex) },
                                     canDelete = state.checklistItems.size > 1,
-                                    focusRequester = if (actualIndex < focusRequesters.size) focusRequesters[actualIndex] else FocusRequester()
+                                    focusRequester = if (actualIndex < focusRequesters.size) focusRequesters[actualIndex] else FocusRequester(),
+                                    indentLevel = indexed.value.indentLevel,
+                                    iconStyle = state.iconStyle
                                 )
                             }
                         }
