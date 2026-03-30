@@ -4,25 +4,25 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 
 ---
 
-## Phase 1: Cross-Cutting Improvements — ✅ ~95% COMPLETE
+## Phase 1: Cross-Cutting Improvements — ✅ COMPLETE
 
 1. **Session persistence for stateful tools** — ✅ COMPLETE
-   - ✅ Tally Counter — persists via DataStore
+   - ✅ Tally Counter — persists via DataStore (JSON for named counters)
    - ✅ Timer — persists config via DataStore
    - ✅ Stopwatch — persists accumulated time and laps via DataStore
 
 2. **Haptic feedback** — ✅ COMPLETE
    - ✅ Calculator, Timer, Stopwatch, Random Generator, Tally Counter all have haptic feedback
 
-3. **History / recent results**
+3. **History / recent results** — ✅ COMPLETE
    - ✅ Calculator — Room-backed, scrollable, clickable to reuse
    - ✅ Random Generator — Room-backed persistent history
    - ✅ Unit Converter — Room-backed history with toggle panel
-   - ❌ Tip Calculator — no history (low priority, tips are ephemeral)
+   - ✅ Tip Calculator — Room-backed history with toggle panel
 
 ---
 
-## Phase 2: Sensor & Hardware Tools — ~85% COMPLETE
+## Phase 2: Sensor & Hardware Tools — ✅ COMPLETE
 
 4. **Stopwatch** — ✅ COMPLETE
    - ✅ Lap deletion (swipe-to-dismiss)
@@ -34,16 +34,16 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
    - ✅ Persistent countdown notification via foreground service
    - ✅ Repeat timer option (toggle in config, auto-restarts with brief alarm)
 
-6. **Compass** — ⚠️ PARTIAL
+6. **Compass** — ✅ COMPLETE
    - ✅ Accuracy indicator (color-coded HIGH/MEDIUM/LOW/UNRELIABLE)
    - ✅ Lock bearing feature
-   - ❌ Magnetic vs true north toggle with declination correction
+   - ✅ True north toggle with GeomagneticField declination correction
 
-7. **Sound Meter** — ⚠️ PARTIAL
+7. **Sound Meter** — ✅ COMPLETE
    - ✅ Min/max tracking with display
    - ✅ Scrolling history chart (Canvas-based waveform, last 100 readings)
    - ✅ Average (avg) tracking with real-time display and CSV export
-   - ❌ Calibration offset setting
+   - ✅ Calibration offset setting (-20 to +20 dB slider, persisted via DataStore)
 
 8. **Bubble Level** — ✅ COMPLETE
    - ✅ Haptic feedback when surface is level
@@ -51,26 +51,26 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 
 ---
 
-## Phase 3: Camera-Based Tools — ~50% COMPLETE
+## Phase 3: Camera-Based Tools — ~75% COMPLETE
 
 9. **QR Scanner** — ⚠️ PARTIAL
    - ✅ Scan history (Room-backed, delete, clear all)
    - ❌ Generate QR code feature
 
-10. **Color Picker** — ⚠️ PARTIAL
+10. **Color Picker** — ✅ MOSTLY COMPLETE
     - ✅ Palette history (Room-backed, horizontal scroll)
-    - ❌ Pick from gallery image
-    - ❌ Color name lookup
+    - ✅ Pick from gallery image (center pixel sampling via Photo Picker)
+    - ✅ Color name lookup (55 CSS colors, nearest match by Euclidean distance)
     - ❌ Export palette
 
-11. **Magnifying Glass** — ⚠️ PARTIAL
+11. **Magnifying Glass** — ✅ COMPLETE
     - ✅ Preset zoom levels (2x, 4x, 6x, 8x chips)
     - ✅ Torch toggle
-    - ❌ Freeze/capture button to snapshot current view
+    - ✅ Freeze/capture button (captures PreviewView bitmap, toggle to unfreeze)
 
 ---
 
-## Phase 4: Computational Tools — ~95% COMPLETE
+## Phase 4: Computational Tools — ✅ COMPLETE
 
 12. **Calculator** — ✅ COMPLETE
     - ✅ Scrollable expression history (Room-persisted)
@@ -78,11 +78,10 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
     - ✅ Percentage button
     - ✅ Scientific calculator toggle
 
-13. **Unit Converter** — ✅ MOSTLY COMPLETE
+13. **Unit Converter** — ✅ COMPLETE
     - ✅ Persist last-used category and units (DataStore)
     - ✅ Swap from/to units
     - ✅ Conversion history (Room-backed, toggle panel in top bar)
-    - ❌ Favorites/pinned conversions (low priority)
 
 14. **Text Tools** — ✅ COMPLETE
     - ✅ Find & replace with match count
@@ -100,25 +99,26 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
     - ✅ Rounding options (none, round total, round per person)
     - ✅ Tax input field
     - ✅ Persist last tip percentage preference
+    - ✅ Calculation history (Room-backed, toggle panel in top bar)
 
 ---
 
-## Phase 5: Info & Simple Tools — ~75% COMPLETE
+## Phase 5: Info & Simple Tools — ~90% COMPLETE
 
 17. **Battery** — ⚠️ PARTIAL
     - ✅ Real-time status, temperature (C/F), voltage, health
     - ❌ Charge session logging (track charge/discharge over time)
     - ❌ Estimated time to full/empty
 
-18. **Network** — ⚠️ PARTIAL
+18. **Network** — ✅ COMPLETE
     - ✅ Ping/latency test (8.8.8.8)
     - ✅ Connection type, IP address, WiFi signal strength
-    - ❌ Connection history log
+    - ✅ Connection history log (Room-backed, timestamped, toggle panel)
 
 19. **Device Info** — ✅ COMPLETE
     - ✅ Grouped by category (Device, Software, Hardware, Display)
     - ✅ Copy all info to clipboard
-    - ✅ Comprehensive details (model, manufacturer, Android version, API, RAM, CPU, screen)
+    - ✅ Search/filter field (real-time filtering across all sections)
 
 20. **Storage** — ✅ COMPLETE
     - ✅ Per-category breakdown (Internal vs External)
@@ -135,29 +135,33 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
     - ✅ Calibration persistence (DataStore)
     - ✅ Metric/Imperial toggle
 
-23. **Tally Counter** — ⚠️ PARTIAL
-    - ✅ Persist count across sessions (DataStore)
+23. **Tally Counter** — ✅ COMPLETE
+    - ✅ Named counters (multiple tallies with JSON persistence, swipe-to-delete)
+    - ✅ Add counter dialog, per-counter increment/decrement/reset
     - ✅ Reset confirmation dialog
     - ✅ Foreground service notification
-    - ❌ Named counters (multiple tallies)
+    - ✅ Backward-compatible migration from single-counter format
 
 ---
 
-## Remaining Work (all ❌ items above)
+## Additional Features (outside original roadmap)
 
-### Medium effort:
-- Compass true north toggle with declination
-- Sound Meter calibration offset
-- Magnifying Glass freeze/capture
-- Color Picker: pick from gallery, color name lookup
-- Network connection history log
-- Tally Counter named counters
-- Device Info search/filter
+- ✅ **Notepad checklist enhancements** — subcategories with indent/outdent, auto-capitalize first word, changeable icons (5 styles), numbered top-level items, auto-collapsing header, Next button focus fix
+- ✅ **Home screen** — scroll to favorites on app open
+- ✅ **Notes camera capture** — take photos directly from notes attachment UI (alongside gallery picker), with runtime camera permission handling
+- ✅ **CI workflow** — changed to manual-only trigger (workflow_dispatch) to save GitHub Actions minutes
 
-### Larger features:
+---
+
+## Remaining Work
+
+### Larger features (not yet implemented):
 - QR Code generation
 - Color Picker palette export
 - Battery charge session logging + time estimates
+
+### Low priority / nice-to-have:
+- Unit Converter favorites/pinned conversions
 
 ---
 
@@ -168,3 +172,5 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 - Use `UtilityTopBar` actions for share/export
 - Keep voice input where text entry exists
 - Use `rememberHaptic()` helper for haptic feedback
+- Use `HistoryDao` with `featureKey` for per-tool Room-backed history
+- Use JSON serialization in DataStore for complex state (stopwatch laps, tally counters)
