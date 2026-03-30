@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.speech.RecognizerIntent
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -158,6 +160,29 @@ fun NoteEditScreen(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         uri?.let { viewModel.addImageFromUri(it) }
+    }
+
+    // Camera capture
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            cameraImageUri?.let { viewModel.addImageFromUri(it) }
+        }
+    }
+
+    val launchCamera: () -> Unit = {
+        val cacheDir = File(context.cacheDir, "camera_temp")
+        cacheDir.mkdirs()
+        val tempFile = File(cacheDir, "photo_${System.currentTimeMillis()}.jpg")
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            tempFile
+        )
+        cameraImageUri = uri
+        cameraLauncher.launch(uri)
     }
 
     var dictationTarget by remember { mutableStateOf("content") }
@@ -428,6 +453,7 @@ fun NoteEditScreen(
                                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                 )
                             },
+                            onTakePhoto = launchCamera,
                             onRemoveImage = { viewModel.removeImage(it) },
                             onImageClick = { viewingImageIndex = it }
                         )
@@ -477,14 +503,19 @@ fun NoteEditScreen(
                 NoteType.TEXT -> {
                     // Add image button for text notes
                     if (state.images.isEmpty()) {
-                        TextButton(
-                            onClick = {
-                                imagePickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(
+                                onClick = {
+                                    imagePickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                }
+                            ) {
+                                Text("Attach image")
                             }
-                        ) {
-                            Text("Attach image")
+                            TextButton(onClick = launchCamera) {
+                                Text("Take photo")
+                            }
                         }
                     }
                     Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
