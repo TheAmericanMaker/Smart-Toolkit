@@ -21,7 +21,8 @@ data class ColorPickerUiState(
     val blue: Int = 0,
     val hue: Float = 0f,
     val saturation: Float = 0f,
-    val lightness: Float = 0f
+    val lightness: Float = 0f,
+    val colorName: String = ""
 )
 
 @HiltViewModel
@@ -46,6 +47,7 @@ class ColorPickerViewModel @Inject constructor(
         val l = v * (1f - s / 2f)
         val sl = if (l == 0f || l == 1f) 0f else (v - l) / minOf(l, 1f - l)
 
+        val colorName = ColorNameLookup.findNearest(r, g, b)
         _uiState.value = ColorPickerUiState(
             colorHex = hex,
             red = r,
@@ -53,7 +55,8 @@ class ColorPickerViewModel @Inject constructor(
             blue = b,
             hue = h,
             saturation = sl,
-            lightness = l
+            lightness = l,
+            colorName = colorName
         )
     }
 

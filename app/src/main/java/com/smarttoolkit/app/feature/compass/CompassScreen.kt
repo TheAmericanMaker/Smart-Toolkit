@@ -19,6 +19,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -84,6 +85,21 @@ fun CompassScreen(
                         accuracyText,
                         style = MaterialTheme.typography.labelSmall,
                         color = accuracyColor
+                    )
+                }
+
+                // True North toggle
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        if (state.useTrueNorth) "True North" else "Magnetic North",
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    Switch(
+                        checked = state.useTrueNorth,
+                        onCheckedChange = { viewModel.toggleTrueNorth() }
                     )
                 }
 

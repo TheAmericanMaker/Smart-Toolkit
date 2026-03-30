@@ -4,6 +4,10 @@ import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -31,12 +35,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,12 +74,39 @@ fun ColorPickerScreen(
     val palette by viewModel.palette.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            try {
+                val stream = context.contentResolver.openInputStream(it)
+                val bitmap = BitmapFactory.decodeStream(stream)
+                stream?.close()
+                if (bitmap != null) {
+                    val cx = bitmap.width / 2
+                    val cy = bitmap.height / 2
+                    val pixel = bitmap.getPixel(cx, cy)
+                    val r = android.graphics.Color.red(pixel)
+                    val g = android.graphics.Color.green(pixel)
+                    val b = android.graphics.Color.blue(pixel)
+                    viewModel.onColorSampled(r, g, b)
+                    bitmap.recycle()
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
     Scaffold(
         topBar = {
             UtilityTopBar(
                 title = "Color Picker",
                 onBack = onBack,
                 actions = {
+                    IconButton(onClick = {
+                        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }) {
+                        Icon(Icons.Filled.PhotoLibrary, contentDescription = "Pick from gallery")
+                    }
                     if (palette.isNotEmpty()) {
                         IconButton(onClick = viewModel::clearPalette) {
                             Icon(Icons.Filled.DeleteSweep, contentDescription = "Clear palette")
@@ -224,6 +257,13 @@ private fun ColorInfoPanel(state: ColorPickerUiState, context: Context, onSave: 
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(state.colorHex, style = MaterialTheme.typography.titleMedium)
+                if (state.colorName.isNotEmpty()) {
+                    Text(
+                        state.colorName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     "RGB(%d, %d, %d)".format(state.red, state.green, state.blue),

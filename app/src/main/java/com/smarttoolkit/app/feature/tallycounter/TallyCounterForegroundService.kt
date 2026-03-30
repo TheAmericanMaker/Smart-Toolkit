@@ -80,7 +80,7 @@ class TallyCounterForegroundService : Service() {
     }
 
     private fun buildNotification(): Notification {
-        val count = stateHolder.uiState.value.count
+        val count = stateHolder.uiState.value.totalCount
 
         val contentIntent = PendingIntent.getActivity(
             this, 0,

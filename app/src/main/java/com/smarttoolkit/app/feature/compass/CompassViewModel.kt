@@ -1,10 +1,13 @@
 package com.smarttoolkit.app.feature.compass
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.hardware.GeomagneticField
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.LocationManager
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -17,8 +20,11 @@ data class CompassUiState(
     val azimuth: Float = 0f,
     val isAvailable: Boolean = true,
     val accuracy: Int = -1,
-    val lockedBearing: Float? = null
+    val lockedBearing: Float? = null,
+    val useTrueNorth: Boolean = false,
+    val declination: Float = 0f
 ) {
+    val northLabel: String get() = if (useTrueNorth) "True" else "Magnetic"
     val degrees: Int get() = ((azimuth + 360) % 360).toInt()
     val direction: String
         get() {
@@ -37,9 +43,10 @@ data class CompassUiState(
         }
 }
 
+@SuppressLint("MissingPermission")
 @HiltViewModel
 class CompassViewModel @Inject constructor(
-    @ApplicationContext context: Context
+    @ApplicationContext private val context: Context
 ) : ViewModel(), SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -76,9 +83,39 @@ class CompassViewModel @Inject constructor(
         if (SensorManager.getRotationMatrix(r, i, g, m)) {
             val orientation = FloatArray(3)
             SensorManager.getOrientation(r, orientation)
-            val azimuthDeg = Math.toDegrees(orientation[0].toDouble()).toFloat()
+            var azimuthDeg = Math.toDegrees(orientation[0].toDouble()).toFloat()
+            if (_uiState.value.useTrueNorth) {
+                azimuthDeg += _uiState.value.declination
+            }
             currentAzimuth = currentAzimuth + 0.15f * (azimuthDeg - currentAzimuth)
             _uiState.value = _uiState.value.copy(azimuth = currentAzimuth)
+        }
+    }
+
+    fun toggleTrueNorth() {
+        val newValue = !_uiState.value.useTrueNorth
+        if (newValue) {
+            // Compute declination from last known location
+            try {
+                val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                val location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                    ?: locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                if (location != null) {
+                    val geoField = GeomagneticField(
+                        location.latitude.toFloat(),
+                        location.longitude.toFloat(),
+                        location.altitude.toFloat(),
+                        System.currentTimeMillis()
+                    )
+                    _uiState.value = _uiState.value.copy(useTrueNorth = true, declination = geoField.declination)
+                } else {
+                    _uiState.value = _uiState.value.copy(useTrueNorth = true, declination = 0f)
+                }
+            } catch (_: Exception) {
+                _uiState.value = _uiState.value.copy(useTrueNorth = true, declination = 0f)
+            }
+        } else {
+            _uiState.value = _uiState.value.copy(useTrueNorth = false)
         }
     }
 

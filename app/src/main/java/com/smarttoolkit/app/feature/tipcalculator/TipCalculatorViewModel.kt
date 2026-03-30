@@ -2,12 +2,16 @@ package com.smarttoolkit.app.feature.tipcalculator
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.db.HistoryDao
+import com.smarttoolkit.app.data.db.HistoryEntry
 import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,11 +32,15 @@ data class TipCalculatorUiState(
 
 @HiltViewModel
 class TipCalculatorViewModel @Inject constructor(
-    private val prefs: UserPreferencesRepository
+    private val prefs: UserPreferencesRepository,
+    private val historyDao: HistoryDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TipCalculatorUiState())
     val uiState: StateFlow<TipCalculatorUiState> = _uiState.asStateFlow()
+
+    val history: StateFlow<List<HistoryEntry>> = historyDao.getByFeature("tipcalculator")
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
@@ -120,5 +128,17 @@ class TipCalculatorViewModel @Inject constructor(
             totalAmount = total,
             perPersonAmount = perPerson
         )
+
+        if (bill > 0) {
+            val label = "$${state.billAmount} + ${"$%.2f".format(tip)} tip (${state.tipPercentage}%) = ${"$%.2f".format(total)}" +
+                if (state.numberOfPeople > 1) " (${"$%.2f".format(perPerson)}/person)" else ""
+            viewModelScope.launch {
+                historyDao.insert(HistoryEntry(featureKey = "tipcalculator", label = label, value = "%.2f".format(total)))
+            }
+        }
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch { historyDao.clearFeature("tipcalculator") }
     }
 }

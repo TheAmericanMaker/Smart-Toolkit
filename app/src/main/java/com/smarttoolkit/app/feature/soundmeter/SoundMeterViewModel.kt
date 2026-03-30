@@ -6,6 +6,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -13,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,13 +31,16 @@ data class SoundMeterUiState(
     val minDb: Double = Double.MAX_VALUE,
     val maxDb: Double = 0.0,
     val avgDb: Double = 0.0,
+    val calibrationOffset: Double = 0.0,
     val isRecording: Boolean = false,
     val dbHistory: List<Double> = emptyList(),
     val timestampedHistory: List<SoundMeterEntry> = emptyList()
 )
 
 @HiltViewModel
-class SoundMeterViewModel @Inject constructor() : ViewModel() {
+class SoundMeterViewModel @Inject constructor(
+    private val prefs: UserPreferencesRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SoundMeterUiState())
     val uiState: StateFlow<SoundMeterUiState> = _uiState.asStateFlow()
@@ -44,6 +49,18 @@ class SoundMeterViewModel @Inject constructor() : ViewModel() {
     private var audioRecord: AudioRecord? = null
     private var dbSum: Double = 0.0
     private var sampleCount: Int = 0
+
+    init {
+        viewModelScope.launch {
+            val offset = prefs.soundMeterOffset.first()
+            _uiState.value = _uiState.value.copy(calibrationOffset = offset.toDouble())
+        }
+    }
+
+    fun setCalibrationOffset(offset: Double) {
+        _uiState.value = _uiState.value.copy(calibrationOffset = offset)
+        viewModelScope.launch { prefs.setSoundMeterOffset(offset.toFloat()) }
+    }
 
     @SuppressLint("MissingPermission")
     fun startRecording() {
@@ -81,8 +98,8 @@ class SoundMeterViewModel @Inject constructor() : ViewModel() {
                         sum += buffer[i].toDouble() * buffer[i].toDouble()
                     }
                     val rms = sqrt(sum / read)
-                    val db = if (rms > 0) 20 * log10(rms / 32767.0) + 90 else 0.0
-                    val clampedDb = db.coerceIn(0.0, 120.0)
+                    val rawDb = if (rms > 0) 20 * log10(rms / 32767.0) + 90 else 0.0
+                    val clampedDb = (rawDb + _uiState.value.calibrationOffset).coerceIn(0.0, 120.0)
 
                     val current = _uiState.value
                     val history = (current.dbHistory + clampedDb).takeLast(100)
@@ -116,6 +133,7 @@ class SoundMeterViewModel @Inject constructor() : ViewModel() {
         sb.appendLine("Min dB,%.1f".format(if (state.minDb == Double.MAX_VALUE) 0.0 else state.minDb))
         sb.appendLine("Max dB,%.1f".format(state.maxDb))
         sb.appendLine("Avg dB,%.1f".format(state.avgDb))
+        sb.appendLine("Calibration Offset,%.1f".format(state.calibrationOffset))
         sb.appendLine("Samples,${state.timestampedHistory.size}")
         return sb.toString()
     }

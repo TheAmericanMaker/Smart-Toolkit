@@ -35,12 +35,14 @@ class UserPreferencesRepository @Inject constructor(
         val RULER_DPI_OFFSET = floatPreferencesKey("ruler_dpi_offset")
         val TIMER_ALARM_SOUND = stringPreferencesKey("timer_alarm_sound")
         val TIMER_REPEAT = booleanPreferencesKey("timer_repeat")
+        val SOUND_METER_OFFSET = floatPreferencesKey("sound_meter_offset")
         val ADS_REMOVED = booleanPreferencesKey("ads_removed")
 
         // Stopwatch persistence
         val STOPWATCH_ACCUMULATED_MS = stringPreferencesKey("stopwatch_accumulated_ms")
         val STOPWATCH_LAST_LAP_MS = stringPreferencesKey("stopwatch_last_lap_ms")
         val STOPWATCH_LAPS_JSON = stringPreferencesKey("stopwatch_laps_json")
+        val TALLY_COUNTERS_JSON = stringPreferencesKey("tally_counters_json")
     }
 
     val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
@@ -97,6 +99,10 @@ class UserPreferencesRepository @Inject constructor(
     val tallyCount: Flow<Int> = dataStore.data.map { it[TALLY_COUNT] ?: 0 }
     suspend fun setTallyCount(count: Int) { dataStore.edit { it[TALLY_COUNT] = count } }
 
+    // Tally Counter (multiple)
+    val tallyCountersJson: Flow<String> = dataStore.data.map { it[TALLY_COUNTERS_JSON] ?: "" }
+    suspend fun setTallyCountersJson(json: String) { dataStore.edit { it[TALLY_COUNTERS_JSON] = json } }
+
     // Tip Calculator
     val tipPercentage: Flow<Int> = dataStore.data.map { it[TIP_PERCENTAGE] ?: 15 }
     suspend fun setTipPercentage(percent: Int) { dataStore.edit { it[TIP_PERCENTAGE] = percent } }
@@ -136,6 +142,10 @@ class UserPreferencesRepository @Inject constructor(
     // Ruler
     val rulerDpiOffset: Flow<Float> = dataStore.data.map { it[RULER_DPI_OFFSET] ?: 0f }
     suspend fun setRulerDpiOffset(offset: Float) { dataStore.edit { it[RULER_DPI_OFFSET] = offset } }
+
+    // Sound Meter calibration
+    val soundMeterOffset: Flow<Float> = dataStore.data.map { it[SOUND_METER_OFFSET] ?: 0f }
+    suspend fun setSoundMeterOffset(offset: Float) { dataStore.edit { it[SOUND_METER_OFFSET] = offset } }
 
     // Stopwatch
     val stopwatchAccumulatedMs: Flow<Long> = dataStore.data.map { (it[STOPWATCH_ACCUMULATED_MS] ?: "0").toLongOrNull() ?: 0L }
