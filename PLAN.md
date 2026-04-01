@@ -51,17 +51,17 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 
 ---
 
-## Phase 3: Camera-Based Tools — ~75% COMPLETE
+## Phase 3: Camera-Based Tools — ✅ COMPLETE
 
-9. **QR Scanner** — ⚠️ PARTIAL
+9. **QR Scanner** — ✅ COMPLETE
    - ✅ Scan history (Room-backed, delete, clear all)
-   - ❌ Generate QR code feature
+   - ✅ QR Code generation (ZXing, text/URL input, bitmap display, share as PNG)
 
-10. **Color Picker** — ✅ MOSTLY COMPLETE
+10. **Color Picker** — ✅ COMPLETE
     - ✅ Palette history (Room-backed, horizontal scroll)
     - ✅ Pick from gallery image (center pixel sampling via Photo Picker)
     - ✅ Color name lookup (55 CSS colors, nearest match by Euclidean distance)
-    - ❌ Export palette
+    - ✅ Export palette (share as formatted text with hex codes + color names)
 
 11. **Magnifying Glass** — ✅ COMPLETE
     - ✅ Preset zoom levels (2x, 4x, 6x, 8x chips)
@@ -103,12 +103,12 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 
 ---
 
-## Phase 5: Info & Simple Tools — ~90% COMPLETE
+## Phase 5: Info & Simple Tools — ✅ COMPLETE
 
-17. **Battery** — ⚠️ PARTIAL
+17. **Battery** — ✅ COMPLETE
     - ✅ Real-time status, temperature (C/F), voltage, health
-    - ❌ Charge session logging (track charge/discharge over time)
-    - ❌ Estimated time to full/empty
+    - ✅ Charge session logging (Room-backed, logs plug/unplug events with percentage)
+    - ✅ Estimated time to full/empty (rate-based calculation from percentage changes)
 
 18. **Network** — ✅ COMPLETE
     - ✅ Ping/latency test (8.8.8.8)
@@ -155,12 +155,9 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 
 ## Remaining Work
 
-### Larger features (not yet implemented):
-- QR Code generation
-- Color Picker palette export
-- Battery charge session logging + time estimates
+All 5 phases are complete. The roadmap is 100% done.
 
-### Low priority / nice-to-have:
+### Low priority / nice-to-have (not in original roadmap):
 - Unit Converter favorites/pinned conversions
 
 ---

@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -108,6 +110,18 @@ fun ColorPickerScreen(
                         Icon(Icons.Filled.PhotoLibrary, contentDescription = "Pick from gallery")
                     }
                     if (palette.isNotEmpty()) {
+                        IconButton(onClick = {
+                            val text = viewModel.exportPalette()
+                            if (text.isNotEmpty()) {
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, text)
+                                }
+                                context.startActivity(Intent.createChooser(intent, "Export Palette"))
+                            }
+                        }) {
+                            Icon(Icons.Filled.Share, contentDescription = "Export palette")
+                        }
                         IconButton(onClick = viewModel::clearPalette) {
                             Icon(Icons.Filled.DeleteSweep, contentDescription = "Clear palette")
                         }

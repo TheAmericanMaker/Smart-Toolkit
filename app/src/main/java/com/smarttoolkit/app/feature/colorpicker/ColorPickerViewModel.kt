@@ -83,4 +83,21 @@ class ColorPickerViewModel @Inject constructor(
     fun clearPalette() {
         viewModelScope.launch { historyDao.clearFeature("color_picker") }
     }
+
+    fun exportPalette(): String {
+        val colors = palette.value
+        if (colors.isEmpty()) return ""
+        return buildString {
+            appendLine("Color Palette (${colors.size} colors)")
+            appendLine()
+            colors.forEach { entry ->
+                val hex = entry.value
+                val r = Integer.parseInt(hex.substring(1, 3), 16)
+                val g = Integer.parseInt(hex.substring(3, 5), 16)
+                val b = Integer.parseInt(hex.substring(5, 7), 16)
+                val name = ColorNameLookup.findNearest(r, g, b)
+                appendLine("$hex - $name")
+            }
+        }.trimEnd()
+    }
 }
