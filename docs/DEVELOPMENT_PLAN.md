@@ -1,5 +1,7 @@
 # Smart Utilities — Feature Upgrade Plan
 
+> **Note:** This is an internal development document kept for historical reference. All phases are complete.
+
 The notepad is now the gold standard: rich editing, persistence, undo, voice input, templates, export/import, smart categorization, swipe actions, subcategories with indent, changeable icons, auto-capitalize, and auto-collapsing header. The goal is to bring the other 21 utilities up in quality using the same patterns.
 
 ---

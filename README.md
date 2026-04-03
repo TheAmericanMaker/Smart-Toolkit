@@ -1,5 +1,9 @@
 # Smart Toolkit
 
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Platform](https://img.shields.io/badge/Platform-Android-green.svg)
+![Min SDK](https://img.shields.io/badge/Min%20SDK-26-blue.svg)
+
 A collection of 21 handy everyday tools in one Android app. Built with Jetpack Compose and Material 3.
 
 Provided by **The American Maker & Claude Code**
@@ -34,10 +38,6 @@ Provided by **The American Maker & Claude Code**
 
 A searchable in-app User Guide is available under **Settings > Help > User Guide**. It covers every utility with how-to instructions, tips, and permission explanations. Sections are collapsible and entries expand on tap. The search bar filters by title, content, and tags in real time.
 
-## Screenshots
-
-*Coming soon*
-
 ## Tech Stack
 
 - **Language:** Kotlin
@@ -51,6 +51,7 @@ A searchable in-app User Guide is available under **Settings > Help > User Guide
 - **Sensors:** Accelerometer (compass, bubble level), magnetometer (compass), microphone (sound meter)
 - **Min SDK:** 26 (Android 8.0)
 - **Target SDK:** 34 (Android 14)
+- **Compile SDK:** 35 (Android 15)
 
 ## Building
 
