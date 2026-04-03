@@ -16,11 +16,11 @@ Smart Toolkit ("we", "our", or "the app") is committed to protecting your privac
 
 ### Permissions
 The app requests the following permissions, all used solely for their respective utilities:
-- **Camera:** QR code scanning
+- **Camera:** QR code scanning, Color Picker, Magnifying Glass, Notepad photo capture
 - **Microphone:** Sound meter
 - **Location sensors:** Compass
 - **Network access:** Displaying ads, network info utility
-- **Vibration:** Timer alerts
+- **Vibration:** Haptic feedback (Timer, Stopwatch, Calculator, Bubble Level, Tally Counter, Random Generator)
 
 No data from these permissions is transmitted to our servers.
 

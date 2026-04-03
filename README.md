@@ -56,7 +56,7 @@ A searchable in-app User Guide is available under **Settings > Help > User Guide
 
 ### Prerequisites
 
-- Android Studio Hedgehog or newer
+- Android Studio Ladybug (2024.2) or newer
 - JDK 17
 
 ### Build Debug APK
@@ -77,7 +77,7 @@ The APK will be at `app/build/outputs/apk/debug/smart-toolkit-debug.apk`.
 
 ## CI/CD
 
-This project uses GitHub Actions to automatically build a debug APK on every push to `main` and on pull requests. Download the APK from the workflow artifacts.
+This project uses GitHub Actions to build a debug APK on demand. Go to the **Actions** tab and run the "Build APK" workflow manually. Download the APK from the workflow artifacts.
 
 ## Project Structure
 
@@ -116,8 +116,11 @@ app/src/main/java/com/smarttoolkit/app/
 │   ├── magnifyingglass/
 │   └── colorpicker/
 ├── data/
+│   ├── billing/                 # In-app purchase (remove ads)
 │   ├── db/                      # Room database, HistoryEntry/DAO, migrations
-│   └── preferences/             # DataStore preferences repository
+│   ├── model/                   # Data models (Note, UtilityItem)
+│   ├── preferences/             # DataStore preferences repository
+│   └── repository/              # Note repository
 └── di/                          # Hilt modules (database, DataStore)
 ```
 
