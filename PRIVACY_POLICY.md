@@ -1,62 +1,66 @@
 # Privacy Policy
 
-**Last updated:** March 8, 2026
+**Last updated:** April 3, 2026
 
-## Introduction
+Smart Toolkit is designed as a local-first Android app. We do not operate an app backend, and we do not collect your notes, settings, or usage history on our own servers.
 
-Smart Toolkit ("we", "our", or "the app") is committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and your choices.
+## Data stored on your device
 
-## Information We Collect
+The app stores the following information locally on your device so features can work across app launches:
 
-### Information You Provide
-- **Notes:** Notes you create in the Notepad utility are stored locally on your device. We do not have access to your notes.
+- notes, checklist items, and note attachments
+- favorites, theme choices, and other settings
+- utility-specific history such as calculator history, QR scan history, and saved palettes
 
-### Information Collected Automatically
-- **Advertising Data:** We use Google AdMob to display ads. AdMob may collect device identifiers, IP address, and usage data to serve relevant ads. See [Google's Privacy Policy](https://policies.google.com/privacy) for details.
+If Android device backup is enabled on your device, app preferences and local databases may also be included in Android's backup or device-transfer systems according to the app's backup rules.
 
-### Permissions
-The app requests the following permissions, all used solely for their respective utilities:
-- **Camera:** QR code scanning
-- **Microphone:** Sound meter
-- **Location sensors:** Compass
-- **Network access:** Displaying ads, network info utility
-- **Vibration:** Timer alerts
+## Optional third-party services
 
-No data from these permissions is transmitted to our servers.
+Some builds of Smart Toolkit may be configured with third-party monetization services:
 
-## How We Use Information
-
-- All utility data (notes, settings, favorites) is stored **locally on your device only**.
-- We do **not** collect, store, or transmit any personal data to our servers.
-- Advertising partners may collect anonymous usage data as described above.
-
-## Third-Party Services
-
-### Google AdMob
-We use Google AdMob to display banner advertisements. AdMob may use cookies and device identifiers to provide and personalize ads. You can opt out of personalized advertising in your device's settings under **Settings > Google > Ads > Opt out of Ads Personalization**.
+- **Google AdMob:** Builds with AdMob enabled may request ads. Google may process device identifiers, IP address, diagnostics, and ad interaction data under its own policies.
+- **Google Play Billing:** Builds with in-app purchases enabled use Google Play to process purchases. We do not receive your raw payment card information.
 
 For more information, see:
-- [Google AdMob Policies](https://support.google.com/admob/answer/6128543)
+
 - [Google Privacy Policy](https://policies.google.com/privacy)
+- [Google AdMob policies](https://support.google.com/admob/answer/6128543)
+- [Google Play Billing overview](https://developer.android.com/google/play/billing)
 
-## Data Retention
+## Permissions
 
-All app data is stored locally on your device. Uninstalling the app removes all locally stored data.
+Smart Toolkit requests permissions only for features that need them:
 
-## Children's Privacy
+- **Camera:** QR Scanner, Magnifier, Color Picker, and note photo attachments
+- **Microphone:** Sound Meter and note voice input
+- **Notifications:** timer, stopwatch, flashlight, and tally counter foreground notifications
+- **Network access:** network utility features, plus AdMob or Google Play Billing when those integrations are enabled
+- **Vibration:** alarms and haptic feedback
+- **Device sensors:** compass and bubble level
 
-Smart Toolkit does not knowingly collect personal information from children under 13. The app displays ads that comply with Google's ad policies.
+We do not send sensor, camera, microphone, note, or settings data to our own servers.
 
-## Your Choices
+## Data sharing
 
-- **Disable personalized ads:** Go to your device's Google settings to opt out of ad personalization.
-- **Revoke permissions:** You can revoke any permission at any time through your device's Settings > Apps > Smart Toolkit > Permissions.
-- **Delete data:** Uninstall the app or clear app data from device settings.
+- We do not sell your personal information.
+- We do not run our own analytics or app backend for Smart Toolkit.
+- Data leaves your device only when you explicitly export or share something, or when a build is configured to use Google services such as AdMob or Google Play Billing.
 
-## Changes to This Policy
+## Your choices
 
-We may update this Privacy Policy from time to time. Changes will be reflected by updating the "Last updated" date above.
+- Revoke permissions at any time from **Settings > Apps > Smart Toolkit > Permissions**.
+- Clear app data or uninstall the app to remove local app storage.
+- Disable Android device backup if you do not want app data included in system backups.
+- Disable ad personalization through your Google account or device settings when using a build that includes AdMob.
+
+## Children's privacy
+
+Smart Toolkit is not directed to children under 13, and we do not knowingly collect personal information from children on our own servers.
+
+## Changes to this policy
+
+We may update this policy as the app changes. The effective date above will be updated when we make material changes.
 
 ## Contact
 
-If you have questions about this Privacy Policy, please open an issue on the project's GitHub repository.
+If you have questions about this policy, please open an issue on the project's GitHub repository.
