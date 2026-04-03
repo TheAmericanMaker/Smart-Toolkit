@@ -34,6 +34,10 @@ class TimerStateHolder @Inject constructor() {
         _timerState.value = _timerState.value.copy(selectedSoundIndex = index)
     }
 
+    fun setRepeatEnabled(enabled: Boolean) {
+        _timerState.value = _timerState.value.copy(repeatEnabled = enabled)
+    }
+
     fun start(totalMs: Long) {
         totalDurationMs = totalMs
         startWallTime = System.currentTimeMillis()

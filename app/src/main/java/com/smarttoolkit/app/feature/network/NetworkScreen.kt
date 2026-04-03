@@ -12,18 +12,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,10 +47,76 @@ fun NetworkScreen(
     viewModel: NetworkViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
+    var showHistory by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { UtilityTopBar(title = "Network", onBack = onBack) }
+        topBar = {
+            UtilityTopBar(
+                title = "Network",
+                onBack = onBack,
+                actions = {
+                    if (history.isNotEmpty()) {
+                        IconButton(onClick = { showHistory = !showHistory }) {
+                            Icon(Icons.Filled.History, contentDescription = "History")
+                        }
+                    }
+                }
+            )
+        }
     ) { padding ->
+        if (showHistory) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Connection History", style = MaterialTheme.typography.titleMedium)
+                    Row {
+                        IconButton(onClick = { viewModel.clearHistory(); showHistory = false }) {
+                            Icon(Icons.Filled.DeleteSweep, contentDescription = "Clear all")
+                        }
+                        OutlinedButton(onClick = { showHistory = false }) { Text("Back") }
+                    }
+                }
+                HorizontalDivider()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp)
+                ) {
+                    history.forEachIndexed { index, entry ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                entry.label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                                    .format(java.util.Date(entry.timestamp)),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (index < history.lastIndex) HorizontalDivider()
+                    }
+                }
+            }
+        } else {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -145,5 +220,6 @@ fun NetworkScreen(
                 }
             }
         }
+        } // end else (not showHistory)
     }
 }

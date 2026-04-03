@@ -21,7 +21,8 @@ data class ColorPickerUiState(
     val blue: Int = 0,
     val hue: Float = 0f,
     val saturation: Float = 0f,
-    val lightness: Float = 0f
+    val lightness: Float = 0f,
+    val colorName: String = ""
 )
 
 @HiltViewModel
@@ -46,6 +47,7 @@ class ColorPickerViewModel @Inject constructor(
         val l = v * (1f - s / 2f)
         val sl = if (l == 0f || l == 1f) 0f else (v - l) / minOf(l, 1f - l)
 
+        val colorName = ColorNameLookup.findNearest(r, g, b)
         _uiState.value = ColorPickerUiState(
             colorHex = hex,
             red = r,
@@ -53,7 +55,8 @@ class ColorPickerViewModel @Inject constructor(
             blue = b,
             hue = h,
             saturation = sl,
-            lightness = l
+            lightness = l,
+            colorName = colorName
         )
     }
 
@@ -79,5 +82,22 @@ class ColorPickerViewModel @Inject constructor(
 
     fun clearPalette() {
         viewModelScope.launch { historyDao.clearFeature("color_picker") }
+    }
+
+    fun exportPalette(): String {
+        val colors = palette.value
+        if (colors.isEmpty()) return ""
+        return buildString {
+            appendLine("Color Palette (${colors.size} colors)")
+            appendLine()
+            colors.forEach { entry ->
+                val hex = entry.value
+                val r = Integer.parseInt(hex.substring(1, 3), 16)
+                val g = Integer.parseInt(hex.substring(3, 5), 16)
+                val b = Integer.parseInt(hex.substring(5, 7), 16)
+                val name = ColorNameLookup.findNearest(r, g, b)
+                appendLine("$hex - $name")
+            }
+        }.trimEnd()
     }
 }

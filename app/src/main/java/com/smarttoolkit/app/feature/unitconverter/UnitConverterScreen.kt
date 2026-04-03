@@ -12,14 +12,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,26 +58,86 @@ fun UnitConverterScreen(
     viewModel: UnitConverterViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
+    var showHistory by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { UtilityTopBar(title = "Unit Converter", onBack = onBack) }
+        topBar = {
+            UtilityTopBar(
+                title = "Unit Converter",
+                onBack = onBack,
+                actions = {
+                    if (history.isNotEmpty()) {
+                        IconButton(onClick = { showHistory = !showHistory }) {
+                            Icon(Icons.Filled.History, contentDescription = "History")
+                        }
+                    }
+                }
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            ScrollableTabRow(selectedTabIndex = state.categoryIndex) {
-                unitCategories.forEachIndexed { index, cat ->
-                    Tab(
-                        selected = index == state.categoryIndex,
-                        onClick = { viewModel.selectCategory(index) },
-                        text = { Text(cat.name) }
-                    )
+            if (showHistory) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Conversion History", style = MaterialTheme.typography.titleMedium)
+                    Row {
+                        IconButton(onClick = { viewModel.clearHistory(); showHistory = false }) {
+                            Icon(Icons.Filled.DeleteSweep, contentDescription = "Clear all")
+                        }
+                        Button(onClick = { showHistory = false }) { Text("Back") }
+                    }
                 }
-            }
+                HorizontalDivider()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp)
+                ) {
+                    history.forEachIndexed { index, entry ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                entry.label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText("conversion", entry.label))
+                            }) {
+                                Icon(Icons.Filled.ContentCopy, contentDescription = "Copy")
+                            }
+                        }
+                        if (index < history.lastIndex) HorizontalDivider()
+                    }
+                }
+            } else {
+                ScrollableTabRow(selectedTabIndex = state.categoryIndex) {
+                    unitCategories.forEachIndexed { index, cat ->
+                        Tab(
+                            selected = index == state.categoryIndex,
+                            onClick = { viewModel.selectCategory(index) },
+                            text = { Text(cat.name) }
+                        )
+                    }
+                }
 
-            Column(
+                Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -128,6 +195,7 @@ fun UnitConverterScreen(
                     }
                 }
             }
+            } // end else (not showHistory)
         }
     }
 }

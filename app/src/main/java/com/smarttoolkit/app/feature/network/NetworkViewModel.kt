@@ -5,13 +5,17 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import androidx.lifecycle.ViewModel
+import com.smarttoolkit.app.data.db.HistoryDao
+import com.smarttoolkit.app.data.db.HistoryEntry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.Inet4Address
@@ -32,11 +36,15 @@ data class NetworkUiState(
 
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val historyDao: HistoryDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NetworkUiState())
     val uiState: StateFlow<NetworkUiState> = _uiState.asStateFlow()
+
+    val history: StateFlow<List<HistoryEntry>> = historyDao.getByFeature("network")
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         refresh()
@@ -73,6 +81,14 @@ class NetworkViewModel @Inject constructor(
             linkSpeed = linkSpd,
             frequency = freq
         )
+
+        viewModelScope.launch {
+            historyDao.insert(HistoryEntry(
+                featureKey = "network",
+                label = "$connectionType - $ip",
+                value = if (isConnected) "Connected" else "Disconnected"
+            ))
+        }
     }
 
     fun ping() {
@@ -89,7 +105,12 @@ class NetworkViewModel @Inject constructor(
                 }
             }
             _uiState.value = _uiState.value.copy(isPinging = false, pingResult = result)
+            historyDao.insert(HistoryEntry(featureKey = "network", label = "Ping 8.8.8.8: $result", value = result))
         }
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch { historyDao.clearFeature("network") }
     }
 
     private fun getIpAddress(): String {

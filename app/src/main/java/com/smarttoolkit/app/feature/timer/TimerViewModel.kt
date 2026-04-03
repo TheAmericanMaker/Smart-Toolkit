@@ -30,7 +30,8 @@ data class TimerUiState(
     val isFinished: Boolean = false,
     val isConfiguring: Boolean = true,
     val availableSounds: List<AlarmSound> = emptyList(),
-    val selectedSoundIndex: Int = 0
+    val selectedSoundIndex: Int = 0,
+    val repeatEnabled: Boolean = false
 ) {
     val displayTime: String
         get() {
@@ -63,8 +64,10 @@ class TimerViewModel @Inject constructor(
             val savedIndex = if (savedUri.isNotEmpty()) {
                 sounds.indexOfFirst { it.uri.toString() == savedUri }.coerceAtLeast(0)
             } else 0
+            val repeat = prefs.timerRepeat.first()
             stateHolder.updateConfig(h, m, s)
             stateHolder.updateSounds(sounds, savedIndex)
+            stateHolder.setRepeatEnabled(repeat)
         }
     }
 
@@ -143,6 +146,12 @@ class TimerViewModel @Inject constructor(
         stateHolder.updateConfig(state.hours, state.minutes, s.coerceIn(0, 59))
     }
 
+    fun toggleRepeat() {
+        val newVal = !stateHolder.timerState.value.repeatEnabled
+        stateHolder.setRepeatEnabled(newVal)
+        viewModelScope.launch { prefs.setTimerRepeat(newVal) }
+    }
+
     fun applyPreset(totalMinutes: Int) {
         val h = totalMinutes / 60
         val m = totalMinutes % 60
@@ -165,6 +174,7 @@ class TimerViewModel @Inject constructor(
             action = TimerForegroundService.ACTION_START
             putExtra(TimerForegroundService.EXTRA_DURATION_MS, totalMs)
             putExtra(TimerForegroundService.EXTRA_ALARM_URI, alarmUri)
+            putExtra(TimerForegroundService.EXTRA_REPEAT, state.repeatEnabled)
         }
         ContextCompat.startForegroundService(context, intent)
     }

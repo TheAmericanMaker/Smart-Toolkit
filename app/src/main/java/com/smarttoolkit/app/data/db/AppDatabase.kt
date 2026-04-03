@@ -7,7 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [NoteEntity::class, ChecklistItemEntity::class, NoteImageEntity::class, HistoryEntry::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -17,6 +17,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE checklist_items ADD COLUMN indentLevel INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE notes ADD COLUMN iconStyle TEXT NOT NULL DEFAULT 'CHECKBOX'")
+            }
+        }
+
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(

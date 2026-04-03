@@ -2,12 +2,16 @@ package com.smarttoolkit.app.feature.unitconverter
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.db.HistoryDao
+import com.smarttoolkit.app.data.db.HistoryEntry
 import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,11 +29,15 @@ data class UnitConverterUiState(
 
 @HiltViewModel
 class UnitConverterViewModel @Inject constructor(
-    private val prefs: UserPreferencesRepository
+    private val prefs: UserPreferencesRepository,
+    private val historyDao: HistoryDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UnitConverterUiState())
     val uiState: StateFlow<UnitConverterUiState> = _uiState.asStateFlow()
+
+    val history: StateFlow<List<HistoryEntry>> = historyDao.getByFeature("unitconverter")
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
@@ -94,6 +102,22 @@ class UnitConverterViewModel @Inject constructor(
         }
         val baseValue = s.fromUnit.toBase(input)
         val result = s.toUnit.fromBase(baseValue)
-        _uiState.value = s.copy(result = "%.6g".format(result))
+        val formatted = "%.6g".format(result)
+        _uiState.value = s.copy(result = formatted)
+
+        // Save to history
+        viewModelScope.launch {
+            historyDao.insert(
+                HistoryEntry(
+                    featureKey = "unitconverter",
+                    label = "${s.inputValue} ${s.fromUnit.symbol} = $formatted ${s.toUnit.symbol}",
+                    value = formatted
+                )
+            )
+        }
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch { historyDao.clearFeature("unitconverter") }
     }
 }

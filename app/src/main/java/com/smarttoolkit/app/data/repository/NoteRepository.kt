@@ -47,6 +47,7 @@ class NoteRepository @Inject constructor(
             category = note.category,
             colorLabel = note.colorLabel,
             isPinned = note.isPinned,
+            iconStyle = note.iconStyle,
             createdAt = note.createdAt,
             updatedAt = now
         )
@@ -65,7 +66,8 @@ class NoteRepository @Inject constructor(
                     noteId = noteId,
                     text = item.text,
                     isChecked = item.isChecked,
-                    position = index
+                    position = index,
+                    indentLevel = item.indentLevel
                 )
             }
             checklistItemDao.insertAll(itemEntities)
@@ -102,6 +104,7 @@ class NoteRepository @Inject constructor(
             category = note.category,
             colorLabel = note.colorLabel,
             isPinned = note.isPinned,
+            iconStyle = note.iconStyle,
             createdAt = note.createdAt,
             updatedAt = note.updatedAt
         )
@@ -113,7 +116,8 @@ class NoteRepository @Inject constructor(
                     noteId = noteId,
                     text = item.text,
                     isChecked = item.isChecked,
-                    position = index
+                    position = index,
+                    indentLevel = item.indentLevel
                 )
             }
             checklistItemDao.insertAll(items)
@@ -164,6 +168,7 @@ private fun NoteEntity.toDomain(
     category = category,
     colorLabel = colorLabel,
     isPinned = isPinned,
+    iconStyle = iconStyle,
     checklistItems = checklistItems,
     images = images,
     createdAt = createdAt,
@@ -174,7 +179,8 @@ private fun ChecklistItemEntity.toDomain(): ChecklistItem = ChecklistItem(
     id = id,
     text = text,
     isChecked = isChecked,
-    position = position
+    position = position,
+    indentLevel = indentLevel
 )
 
 private fun NoteImageEntity.toDomain(): NoteImage = NoteImage(

@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +19,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -97,6 +100,32 @@ fun FlashlightScreen(
                 )
 
                 if (state.mode == FlashMode.STROBE) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "Speed: ${state.strobeDelayMs}ms",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Fast", style = MaterialTheme.typography.labelSmall)
+                            Text("Slow", style = MaterialTheme.typography.labelSmall)
+                        }
+                        Slider(
+                            value = state.strobeDelayMs.toFloat(),
+                            onValueChange = { viewModel.setStrobeSpeed(it.toLong()) },
+                            valueRange = 50f..500f,
+                            steps = 8,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "Warning: Strobe may cause discomfort",

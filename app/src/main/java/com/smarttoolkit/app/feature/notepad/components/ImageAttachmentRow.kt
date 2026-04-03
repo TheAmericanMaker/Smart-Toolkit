@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,12 +15,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +39,7 @@ fun ImageAttachmentRow(
     images: List<NoteImageUiState>,
     getImageFile: (String) -> File,
     onAddImage: () -> Unit,
+    onTakePhoto: (() -> Unit)? = null,
     onRemoveImage: (Int) -> Unit,
     onImageClick: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -98,6 +102,7 @@ fun ImageAttachmentRow(
             }
         }
         if (images.size < 5) {
+            // Gallery picker
             OutlinedCard(
                 onClick = onAddImage,
                 modifier = Modifier.size(80.dp)
@@ -106,11 +111,43 @@ fun ImageAttachmentRow(
                     modifier = Modifier.size(80.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.AddPhotoAlternate,
-                        contentDescription = "Add image",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Filled.AddPhotoAlternate,
+                            contentDescription = "Add from gallery",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "Gallery",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            // Camera capture
+            if (onTakePhoto != null) {
+                OutlinedCard(
+                    onClick = onTakePhoto,
+                    modifier = Modifier.size(80.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.size(80.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Filled.CameraAlt,
+                                contentDescription = "Take photo",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "Camera",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }

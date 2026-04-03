@@ -1,14 +1,20 @@
 package com.smarttoolkit.app.feature.randomgenerator
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.data.db.HistoryDao
+import com.smarttoolkit.app.data.db.HistoryEntry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
 
-enum class RandomMode { NUMBER, DICE, COIN, PASSWORD }
+enum class RandomMode { NUMBER, DICE, COIN, PASSWORD, SHUFFLE }
 
 data class RandomGeneratorUiState(
     val mode: RandomMode = RandomMode.NUMBER,
@@ -21,14 +27,19 @@ data class RandomGeneratorUiState(
     val includeDigits: Boolean = true,
     val includeSymbols: Boolean = false,
     val batchCount: String = "1",
-    val history: List<String> = emptyList()
+    val shuffleInput: String = ""
 )
 
 @HiltViewModel
-class RandomGeneratorViewModel @Inject constructor() : ViewModel() {
+class RandomGeneratorViewModel @Inject constructor(
+    private val historyDao: HistoryDao
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RandomGeneratorUiState())
     val uiState: StateFlow<RandomGeneratorUiState> = _uiState.asStateFlow()
+
+    val history: StateFlow<List<HistoryEntry>> = historyDao.getByFeature("randomgenerator")
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setMode(mode: RandomMode) { _uiState.value = _uiState.value.copy(mode = mode, result = "", batchCount = "1") }
     fun setBatchCount(v: String) { _uiState.value = _uiState.value.copy(batchCount = v.filter { it.isDigit() }) }
@@ -39,6 +50,7 @@ class RandomGeneratorViewModel @Inject constructor() : ViewModel() {
     fun toggleLowercase() { _uiState.value = _uiState.value.copy(includeLowercase = !_uiState.value.includeLowercase) }
     fun toggleDigits() { _uiState.value = _uiState.value.copy(includeDigits = !_uiState.value.includeDigits) }
     fun toggleSymbols() { _uiState.value = _uiState.value.copy(includeSymbols = !_uiState.value.includeSymbols) }
+    fun setShuffleInput(v: String) { _uiState.value = _uiState.value.copy(shuffleInput = v) }
 
     private fun generateOne(): String {
         val s = _uiState.value
@@ -62,19 +74,40 @@ class RandomGeneratorViewModel @Inject constructor() : ViewModel() {
                 if (chars.isEmpty()) "Select at least one character type"
                 else (1..length).map { chars.random() }.joinToString("")
             }
+            RandomMode.SHUFFLE -> {
+                val items = s.shuffleInput.split(Regex("[\\n,]")).map { it.trim() }.filter { it.isNotEmpty() }
+                if (items.isEmpty()) "Enter items to shuffle"
+                else items.shuffled().joinToString("\n")
+            }
         }
     }
 
     fun generate() {
         val s = _uiState.value
-        val count = s.batchCount.toIntOrNull()?.coerceIn(1, 100) ?: 1
-        val results = (1..count).map { generateOne() }
-        val displayResult = results.joinToString("\n")
-        val newHistory = (results + s.history).take(50)
-        _uiState.value = s.copy(result = displayResult, history = newHistory)
+        if (s.mode == RandomMode.SHUFFLE) {
+            val result = generateOne()
+            _uiState.value = s.copy(result = result)
+            viewModelScope.launch {
+                historyDao.insert(HistoryEntry(featureKey = "randomgenerator", label = result.replace("\n", ", "), value = result))
+            }
+        } else {
+            val count = s.batchCount.toIntOrNull()?.coerceIn(1, 100) ?: 1
+            val results = (1..count).map { generateOne() }
+            val displayResult = results.joinToString("\n")
+            _uiState.value = s.copy(result = displayResult)
+            viewModelScope.launch {
+                results.forEach { r ->
+                    historyDao.insert(HistoryEntry(featureKey = "randomgenerator", label = r, value = r))
+                }
+            }
+        }
     }
 
     fun clearHistory() {
-        _uiState.value = _uiState.value.copy(history = emptyList())
+        viewModelScope.launch { historyDao.clearFeature("randomgenerator") }
+    }
+
+    fun deleteHistoryEntry(id: Long) {
+        viewModelScope.launch { historyDao.delete(id) }
     }
 }

@@ -18,11 +18,17 @@ object NoteShareFormatter {
             when (type) {
                 NoteType.TEXT -> append(content)
                 NoteType.CHECKLIST -> {
+                    var topLevelNumber = 0
                     checklistItems
                         .filter { it.text.isNotBlank() }
                         .forEach { item ->
-                            val box = if (item.isChecked) "☑" else "☐"
-                            appendLine("$box ${item.text}")
+                            val box = if (item.isChecked) "\u2611" else "\u2610"
+                            if (item.indentLevel == 0) {
+                                topLevelNumber++
+                                appendLine("$topLevelNumber. $box ${item.text}")
+                            } else {
+                                appendLine("   $box ${item.text}")
+                            }
                         }
                 }
             }
@@ -47,12 +53,18 @@ object NoteShareFormatter {
                 }
                 NoteType.CHECKLIST -> {
                     append("<ul style=\"list-style-type: none; padding: 0;\">")
+                    var topLevelNumber = 0
                     checklistItems
                         .filter { it.text.isNotBlank() }
                         .forEach { item ->
                             val decoration = if (item.isChecked) "text-decoration: line-through; color: #888;" else ""
-                            val check = if (item.isChecked) "☑" else "☐"
-                            append("<li style=\"$decoration\">$check ${item.text}</li>")
+                            val check = if (item.isChecked) "\u2611" else "\u2610"
+                            val indent = if (item.indentLevel > 0) "padding-left: 24px;" else ""
+                            val prefix = if (item.indentLevel == 0) {
+                                topLevelNumber++
+                                "$topLevelNumber. "
+                            } else ""
+                            append("<li style=\"$decoration$indent\">$prefix$check ${item.text}</li>")
                         }
                     append("</ul>")
                 }

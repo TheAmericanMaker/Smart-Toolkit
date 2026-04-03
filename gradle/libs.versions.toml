@@ -20,6 +20,7 @@ play-services-ads = "23.6.0"
 billing = "7.1.1"
 concurrent-futures = "1.2.0"
 guava = "33.4.0-android"
+zxing-core = "3.5.3"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -63,6 +64,7 @@ billing = { group = "com.android.billingclient", name = "billing-ktx", version.r
 concurrent-futures = { group = "androidx.concurrent", name = "concurrent-futures", version.ref = "concurrent-futures" }
 concurrent-futures-ktx = { group = "androidx.concurrent", name = "concurrent-futures-ktx", version.ref = "concurrent-futures" }
 guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing-core" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 

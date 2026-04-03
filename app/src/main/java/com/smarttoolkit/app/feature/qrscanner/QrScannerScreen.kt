@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -12,6 +13,7 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,13 +31,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -50,7 +57,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -81,10 +93,16 @@ fun QrScannerScreen(
     Scaffold(
         topBar = {
             UtilityTopBar(
-                title = "QR Scanner",
+                title = if (state.isGenerateMode) "QR Generator" else "QR Scanner",
                 onBack = onBack,
                 actions = {
-                    if (history.isNotEmpty()) {
+                    IconButton(onClick = { viewModel.toggleGenerateMode() }) {
+                        Icon(
+                            if (state.isGenerateMode) Icons.Filled.QrCodeScanner else Icons.Filled.QrCode,
+                            contentDescription = if (state.isGenerateMode) "Switch to Scan" else "Switch to Generate"
+                        )
+                    }
+                    if (history.isNotEmpty() && !state.isGenerateMode) {
                         IconButton(onClick = { showHistory = !showHistory }) {
                             Icon(Icons.Filled.History, contentDescription = "Scan history")
                         }
@@ -98,7 +116,9 @@ fun QrScannerScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (showHistory) {
+            if (state.isGenerateMode) {
+                QrGeneratorView(state = state, viewModel = viewModel)
+            } else if (showHistory) {
                 ScanHistoryView(
                     history = history,
                     onEntryClick = { entry ->
@@ -310,6 +330,73 @@ private fun ResultView(value: String, isUrl: Boolean, onScanAgain: () -> Unit) {
             }
 
             Button(onClick = onScanAgain) { Text("Scan Again") }
+        }
+    }
+}
+
+@Composable
+private fun QrGeneratorView(state: QrScannerUiState, viewModel: QrScannerViewModel) {
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        OutlinedTextField(
+            value = state.generateText,
+            onValueChange = viewModel::setGenerateText,
+            label = { Text("Text or URL") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = false,
+            maxLines = 4
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = viewModel::generateQrCode,
+            enabled = state.generateText.isNotBlank()
+        ) { Text("Generate QR Code") }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        state.generatedBitmap?.let { bitmap ->
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = "Generated QR Code",
+                        modifier = Modifier.size(256.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = {
+                            try {
+                                val file = File(context.cacheDir, "qr_code.png")
+                                FileOutputStream(file).use { fos ->
+                                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                                }
+                                val uri = FileProvider.getUriForFile(
+                                    context, "${context.packageName}.fileprovider", file
+                                )
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "image/png"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(Intent.createChooser(intent, "Share QR Code"))
+                            } catch (_: Exception) {}
+                        }) {
+                            Icon(Icons.Filled.Share, contentDescription = null)
+                            Text(" Share")
+                        }
+                    }
+                }
+            }
         }
     }
 }

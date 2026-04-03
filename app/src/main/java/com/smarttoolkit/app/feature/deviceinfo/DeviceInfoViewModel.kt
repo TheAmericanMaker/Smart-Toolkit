@@ -19,8 +19,21 @@ data class DeviceInfoSection(val title: String, val items: List<DeviceInfoItem>)
 
 data class DeviceInfoUiState(
     val items: List<DeviceInfoItem> = emptyList(),
-    val sections: List<DeviceInfoSection> = emptyList()
-)
+    val sections: List<DeviceInfoSection> = emptyList(),
+    val searchQuery: String = ""
+) {
+    val filteredSections: List<DeviceInfoSection>
+        get() {
+            if (searchQuery.isBlank()) return sections
+            return sections.mapNotNull { section ->
+                val filtered = section.items.filter {
+                    it.label.contains(searchQuery, ignoreCase = true) ||
+                        it.value.contains(searchQuery, ignoreCase = true)
+                }
+                if (filtered.isEmpty()) null else section.copy(items = filtered)
+            }
+        }
+}
 
 @HiltViewModel
 class DeviceInfoViewModel @Inject constructor(
@@ -81,5 +94,9 @@ class DeviceInfoViewModel @Inject constructor(
         )
 
         _uiState.value = DeviceInfoUiState(items = allItems, sections = sections)
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _uiState.value = _uiState.value.copy(searchQuery = query)
     }
 }

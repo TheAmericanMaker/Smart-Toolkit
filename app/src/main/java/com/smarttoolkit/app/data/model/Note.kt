@@ -10,6 +10,7 @@ data class Note(
     val category: String? = null,
     val colorLabel: String? = null,
     val isPinned: Boolean = false,
+    val iconStyle: String = "CHECKBOX",
     val checklistItems: List<ChecklistItem> = emptyList(),
     val images: List<NoteImage> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
@@ -20,7 +21,8 @@ data class ChecklistItem(
     val id: Long = 0,
     val text: String = "",
     val isChecked: Boolean = false,
-    val position: Int = 0
+    val position: Int = 0,
+    val indentLevel: Int = 0
 )
 
 data class NoteImage(

@@ -5,6 +5,8 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,10 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +37,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -74,15 +81,52 @@ fun MagnifyingGlassScreen(
                 permission = Manifest.permission.CAMERA,
                 rationaleText = "Camera permission is needed to use the magnifier."
             ) {
-                CameraPreviewWithZoom(
-                    zoomRatio = state.zoomRatio,
-                    minZoom = state.minZoom,
-                    maxZoom = state.maxZoom,
-                    isTorchOn = state.isTorchOn,
-                    onZoomChanged = viewModel::onZoomChanged,
-                    onZoomRangeDetected = viewModel::onZoomRangeDetected,
-                    modifier = Modifier.weight(1f)
-                )
+                var frozenBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                var previewViewRef by remember { mutableStateOf<PreviewView?>(null) }
+
+                Box(modifier = Modifier.weight(1f)) {
+                    if (state.isFrozen && frozenBitmap != null) {
+                        Image(
+                            bitmap = frozenBitmap!!.asImageBitmap(),
+                            contentDescription = "Frozen frame",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        CameraPreviewWithZoom(
+                            zoomRatio = state.zoomRatio,
+                            minZoom = state.minZoom,
+                            maxZoom = state.maxZoom,
+                            isTorchOn = state.isTorchOn,
+                            onZoomChanged = viewModel::onZoomChanged,
+                            onZoomRangeDetected = viewModel::onZoomRangeDetected,
+                            onPreviewViewReady = { previewViewRef = it },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+                // Freeze/unfreeze button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(onClick = {
+                        if (!state.isFrozen) {
+                            frozenBitmap = previewViewRef?.bitmap
+                        } else {
+                            frozenBitmap = null
+                        }
+                        viewModel.toggleFreeze()
+                    }) {
+                        Icon(
+                            if (state.isFrozen) Icons.Filled.PlayArrow else Icons.Filled.CameraAlt,
+                            contentDescription = null
+                        )
+                        Text(if (state.isFrozen) " Unfreeze" else " Freeze")
+                    }
+                }
+
                 ZoomControls(
                     zoomRatio = state.zoomRatio,
                     minZoom = state.minZoom,
@@ -102,11 +146,12 @@ private fun CameraPreviewWithZoom(
     isTorchOn: Boolean,
     onZoomChanged: (Float) -> Unit,
     onZoomRangeDetected: (Float, Float) -> Unit,
+    onPreviewViewReady: ((PreviewView) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val previewView = remember { PreviewView(context) }
+    val previewView = remember { PreviewView(context).also { onPreviewViewReady?.invoke(it) } }
     var camera by remember { mutableStateOf<androidx.camera.core.Camera?>(null) }
 
     LaunchedEffect(Unit) {

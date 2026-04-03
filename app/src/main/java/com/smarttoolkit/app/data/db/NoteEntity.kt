@@ -12,6 +12,7 @@ data class NoteEntity(
     val category: String? = null,
     val colorLabel: String? = null,
     val isPinned: Boolean = false,
+    val iconStyle: String = "CHECKBOX",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

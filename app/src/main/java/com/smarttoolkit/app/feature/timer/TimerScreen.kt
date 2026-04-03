@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -100,6 +101,20 @@ fun TimerScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // Repeat toggle
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Repeat", style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = state.repeatEnabled,
+                        onCheckedChange = { viewModel.toggleRepeat() }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Alarm sound selector
                 OutlinedButton(onClick = { showSoundPicker = true }) {

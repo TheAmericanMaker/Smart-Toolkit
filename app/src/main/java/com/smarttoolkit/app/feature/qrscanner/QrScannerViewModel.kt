@@ -1,7 +1,10 @@
 package com.smarttoolkit.app.feature.qrscanner
 
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import com.smarttoolkit.app.data.db.HistoryDao
 import com.smarttoolkit.app.data.db.HistoryEntry
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +19,10 @@ import javax.inject.Inject
 data class QrScannerUiState(
     val scannedValue: String? = null,
     val isUrl: Boolean = false,
-    val isScanning: Boolean = true
+    val isScanning: Boolean = true,
+    val isGenerateMode: Boolean = false,
+    val generateText: String = "",
+    val generatedBitmap: Bitmap? = null
 )
 
 @HiltViewModel
@@ -59,5 +65,37 @@ class QrScannerViewModel @Inject constructor(
 
     fun clearHistory() {
         viewModelScope.launch { historyDao.clearFeature("qr_scanner") }
+    }
+
+    fun toggleGenerateMode() {
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            isGenerateMode = !current.isGenerateMode,
+            generatedBitmap = null,
+            generateText = "",
+            scannedValue = null,
+            isScanning = !current.isGenerateMode
+        )
+    }
+
+    fun setGenerateText(text: String) {
+        _uiState.value = _uiState.value.copy(generateText = text)
+    }
+
+    fun generateQrCode() {
+        val text = _uiState.value.generateText
+        if (text.isBlank()) return
+        try {
+            val size = 512
+            val writer = QRCodeWriter()
+            val bitMatrix = writer.encode(text, BarcodeFormat.QR_CODE, size, size)
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565)
+            for (x in 0 until size) {
+                for (y in 0 until size) {
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                }
+            }
+            _uiState.value = _uiState.value.copy(generatedBitmap = bitmap)
+        } catch (_: Exception) {}
     }
 }

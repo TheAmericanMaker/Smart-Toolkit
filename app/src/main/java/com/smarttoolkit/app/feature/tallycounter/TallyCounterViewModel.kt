@@ -13,8 +13,11 @@ import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 data class TallyCounterUiState(
-    val count: Int = 0
-)
+    val counters: List<TallyCounterItem> = listOf(TallyCounterItem(name = "Counter 1")),
+    val count: Int = 0 // Legacy, computed from first counter
+) {
+    val totalCount: Int get() = counters.firstOrNull()?.count ?: 0
+}
 
 @HiltViewModel
 class TallyCounterViewModel @Inject constructor(
@@ -42,6 +45,12 @@ class TallyCounterViewModel @Inject constructor(
     fun reset() {
         stateHolder.reset()
     }
+
+    fun addCounter(name: String) { stateHolder.addCounter(name) }
+    fun deleteCounter(id: String) { stateHolder.deleteCounter(id) }
+    fun incrementCounter(id: String) { stateHolder.increment(id) }
+    fun decrementCounter(id: String) { stateHolder.decrement(id) }
+    fun resetCounter(id: String) { stateHolder.resetCounter(id) }
 
     fun startNotificationService() {
         if (isNotificationActive) return

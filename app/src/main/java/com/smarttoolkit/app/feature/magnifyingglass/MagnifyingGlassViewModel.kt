@@ -11,7 +11,8 @@ data class MagnifyingGlassUiState(
     val zoomRatio: Float = 1f,
     val minZoom: Float = 1f,
     val maxZoom: Float = 1f,
-    val isTorchOn: Boolean = false
+    val isTorchOn: Boolean = false,
+    val isFrozen: Boolean = false
 )
 
 @HiltViewModel
@@ -32,5 +33,9 @@ class MagnifyingGlassViewModel @Inject constructor() : ViewModel() {
 
     fun toggleTorch() {
         _uiState.value = _uiState.value.copy(isTorchOn = !_uiState.value.isTorchOn)
+    }
+
+    fun toggleFreeze() {
+        _uiState.value = _uiState.value.copy(isFrozen = !_uiState.value.isFrozen)
     }
 }

@@ -16,7 +16,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -28,10 +32,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smarttoolkit.app.feature.tipcalculator.RoundingMode
@@ -44,10 +56,79 @@ fun TipCalculatorScreen(
     viewModel: TipCalculatorViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
+    var showHistory by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Scaffold(
-        topBar = { UtilityTopBar(title = "Tip Calculator", onBack = onBack) }
+        topBar = {
+            UtilityTopBar(
+                title = "Tip Calculator",
+                onBack = onBack,
+                actions = {
+                    if (history.isNotEmpty()) {
+                        IconButton(onClick = { showHistory = !showHistory }) {
+                            Icon(Icons.Filled.History, contentDescription = "History")
+                        }
+                    }
+                }
+            )
+        }
     ) { padding ->
+        if (showHistory) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Tip History", style = MaterialTheme.typography.titleMedium)
+                    Row {
+                        IconButton(onClick = { viewModel.clearHistory(); showHistory = false }) {
+                            Icon(Icons.Filled.DeleteSweep, contentDescription = "Clear all")
+                        }
+                        Button(onClick = { showHistory = false }) { Text("Back") }
+                    }
+                }
+                HorizontalDivider()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp)
+                ) {
+                    history.forEachIndexed { index, entry ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                entry.label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText("tip", entry.label))
+                            }) {
+                                Icon(Icons.Filled.ContentCopy, contentDescription = "Copy")
+                            }
+                        }
+                        if (index < history.lastIndex) HorizontalDivider()
+                    }
+                }
+            }
+        } else {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -170,6 +251,7 @@ fun TipCalculatorScreen(
                 }
             }
         }
+        } // end else (not showHistory)
     }
 }
 

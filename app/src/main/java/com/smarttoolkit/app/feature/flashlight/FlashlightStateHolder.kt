@@ -86,6 +86,15 @@ class FlashlightStateHolder @Inject constructor(
         }
     }
 
+    fun setStrobeDelay(delayMs: Long) {
+        _uiState.value = _uiState.value.copy(strobeDelayMs = delayMs.coerceIn(50, 500))
+        // Restart strobe if currently running
+        if (_uiState.value.isOn && _uiState.value.mode == FlashMode.STROBE) {
+            stopPattern()
+            startStrobe()
+        }
+    }
+
     private fun stopPattern() {
         patternJob?.cancel()
         patternJob = null
@@ -125,7 +134,7 @@ class FlashlightStateHolder @Inject constructor(
             while (isActive) {
                 on = !on
                 try { cameraManager.setTorchMode(id, on) } catch (_: Exception) {}
-                delay(100L)
+                delay(_uiState.value.strobeDelayMs)
             }
             try { cameraManager.setTorchMode(id, false) } catch (_: Exception) {}
         }

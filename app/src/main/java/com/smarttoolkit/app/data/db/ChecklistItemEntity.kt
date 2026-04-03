@@ -20,5 +20,6 @@ data class ChecklistItemEntity(
     val noteId: Long,
     val text: String = "",
     val isChecked: Boolean = false,
-    val position: Int = 0
+    val position: Int = 0,
+    val indentLevel: Int = 0
 )

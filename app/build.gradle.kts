@@ -99,6 +99,7 @@ dependencies {
     implementation(libs.concurrent.futures)
     implementation(libs.concurrent.futures.ktx)
     implementation(libs.guava)
+    implementation(libs.zxing.core)
 
     // Coroutines
     implementation(libs.coroutines.android)

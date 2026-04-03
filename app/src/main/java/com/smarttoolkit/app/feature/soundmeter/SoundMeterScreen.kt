@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -185,6 +186,13 @@ private fun SoundMeterContent(viewModel: SoundMeterViewModel) {
                 Text("Max", style = MaterialTheme.typography.labelMedium)
                 Text("%.0f dB".format(state.maxDb), fontFamily = FontFamily.Monospace)
             }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Avg", style = MaterialTheme.typography.labelMedium)
+                Text(
+                    if (state.avgDb == 0.0 && !state.isRecording) "--" else "%.0f dB".format(state.avgDb),
+                    fontFamily = FontFamily.Monospace
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -231,6 +239,21 @@ private fun SoundMeterContent(viewModel: SoundMeterViewModel) {
         }
 
         Spacer(modifier = Modifier.height(8.dp))
+
+        // Calibration
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text("Calibration: %+.0f dB".format(state.calibrationOffset), style = MaterialTheme.typography.labelSmall)
+                Slider(
+                    value = state.calibrationOffset.toFloat(),
+                    onValueChange = { viewModel.setCalibrationOffset(it.toDouble()) },
+                    valueRange = -20f..20f,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             "Approximate readings only",
             style = MaterialTheme.typography.bodySmall,
