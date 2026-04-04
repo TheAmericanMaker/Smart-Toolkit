@@ -1,126 +1,103 @@
 # Smart Toolkit
 
-A collection of 21 handy everyday tools in one Android app. Built with Jetpack Compose and Material 3.
+[![Android CI](https://github.com/TheAmericanMaker/Smart-Toolkit/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/TheAmericanMaker/Smart-Toolkit/actions/workflows/build.yml)
+
+Smart Toolkit is a local-first Android utility app with 21 everyday tools in a single Jetpack Compose app.
 
 Provided by **The American Maker & Claude Code**
 
-## Features
+## Highlights
 
-| Utility | Description |
-|---------|-------------|
-| Flashlight | Toggle flashlight with Steady, SOS (morse code), and Strobe modes; notification tray control with Turn Off button |
-| Stopwatch | Precision stopwatch with lap tracking, swipe-to-delete laps, haptic feedback; notification tray controls (pause/resume/lap/stop) |
-| Timer | Countdown timer with quick presets (1m–30m), background foreground service, notification controls (pause/resume/cancel/dismiss from tray), selectable alarm sounds |
-| Calculator | Expression-based calculator with history panel, tap to reuse results, haptic feedback |
-| Battery | Real-time battery stats with color-coded arc gauge, tap to toggle °C/°F |
-| Compass | Digital compass with accuracy indicator, lock bearing marker, cardinal labels |
-| Network | Connection info with visual signal bars, ping test (latency to 8.8.8.8) |
-| Storage | Internal/external usage with arc chart, detailed breakdown, refresh |
-| Ruler | On-screen ruler (cm/mm and inches) with DPI calibration slider |
-| QR Scanner | Scan QR/barcodes with scan history, swipe-to-delete, tap to re-view |
-| Unit Converter | Convert across 7 categories, persisted selections, copy result, conversion formula |
-| Text Tools | Counts, case transforms, find & replace, remove duplicate lines, sort lines, word frequency |
-| Random Generator | Numbers, dice, coin, passwords with batch generation (1–100) and history |
-| Notepad | Rich note-taking with Room database, voice dictation at cursor, color labels |
-| Device Info | Model, CPU, RAM, screen specs grouped into Device/Software/Hardware/Display sections |
-| Sound Meter | Ambient dB measurement with color-coded gauge, live scrolling chart, min/max tracking |
-| Bubble Level | Surface and side level with calibration, haptic feedback on level |
-| Tip Calculator | Bill splitting with tax field, custom tips, rounding modes (total/per person) |
-| Tally Counter | Persistent counter (DataStore), reset confirmation dialog, haptic feedback; pin-to-notification with +1/−1 buttons |
-| Magnifier | Camera-based magnifier with zoom presets (2x–8x), slider, and torch |
-| Color Picker | Live camera color sampling with HEX/RGB/HSL, save palette (last 20), tap to copy |
+- 21 built-in tools covering timing, measurement, device info, note-taking, text manipulation, and camera utilities
+- Modern Android stack: Kotlin, Jetpack Compose, Material 3, Hilt, Room, DataStore, CameraX, and ML Kit
+- Local-first data model: notes, favorites, history, and settings stay on-device
+- Searchable in-app user guide under **Settings > Help > User Guide**
+- Optional AdMob and Google Play Billing support for release builds, with safe defaults for public source builds
 
-## User Guide
+## Included utilities
 
-A searchable in-app User Guide is available under **Settings > Help > User Guide**. It covers every utility with how-to instructions, tips, and permission explanations. Sections are collapsible and entries expand on tap. The search bar filters by title, content, and tags in real time.
+- Time and productivity: Stopwatch, Timer, Calculator, Notepad, Tally Counter
+- Measurement and sensors: Compass, Bubble Level, Sound Meter, Ruler
+- Device and network: Battery, Network, Storage, Device Info
+- Camera and visual tools: Flashlight, QR Scanner, Magnifier, Color Picker
+- Converters and generators: Unit Converter, Text Tools, Random Generator, Tip Calculator
 
-## Screenshots
+## Requirements
 
-*Coming soon*
-
-## Tech Stack
-
-- **Language:** Kotlin
-- **UI:** Jetpack Compose + Material 3 with dynamic color
-- **Architecture:** MVVM with StateFlow
-- **DI:** Hilt
-- **Navigation:** Navigation Compose
-- **Local Storage:** Room (notes, history), DataStore Preferences (settings, favorites, utility state)
-- **Camera:** CameraX + ML Kit Barcode Scanning
-- **Background:** Foreground services (timer, stopwatch, flashlight, tally counter notification controls)
-- **Sensors:** Accelerometer (compass, bubble level), magnetometer (compass), microphone (sound meter)
-- **Min SDK:** 26 (Android 8.0)
-- **Target SDK:** 34 (Android 14)
-
-## Building
-
-### Prerequisites
-
-- Android Studio Hedgehog or newer
+- Android Studio with Android SDK Platform 35 installed, or a command-line environment with `ANDROID_SDK_ROOT`
 - JDK 17
+- Android 8.0+ device or emulator for running the app (`minSdk = 26`)
 
-### Build Debug APK
+## Quick start
+
+1. Clone the repository and open it in Android Studio, or ensure `ANDROID_SDK_ROOT` points at a local Android SDK installation.
+2. Build a debug APK:
 
 ```bash
 ./gradlew assembleDebug
 ```
 
-The APK will be at `app/build/outputs/apk/debug/smart-toolkit-debug.apk`.
+On Windows PowerShell, use:
 
-### Build Release APK
+```powershell
+.\gradlew.bat assembleDebug
+```
+
+The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
+
+## Release builds
+
+Google Play releases should be produced as Android App Bundles:
 
 ```bash
-./gradlew assembleRelease
+./gradlew bundleRelease
 ```
 
-> Note: Release builds require signing configuration. See [Android signing docs](https://developer.android.com/studio/publish/app-signing).
+The release bundle is written to `app/build/outputs/bundle/release/app-release.aab`.
 
-## CI/CD
+Release builds require:
 
-This project uses GitHub Actions to automatically build a debug APK on every push to `main` and on pull requests. Download the APK from the workflow artifacts.
+- a signing configuration for your release key
+- optional AdMob and Google Play Billing configuration if you want ads and the "Remove Ads" purchase enabled
 
-## Project Structure
+Release monetization is configured with Gradle properties or environment variables:
 
+```properties
+SMART_TOOLKIT_ADMOB_APP_ID=ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy
+SMART_TOOLKIT_ADMOB_BANNER_ID=ca-app-pub-xxxxxxxxxxxxxxxx/zzzzzzzzzz
+SMART_TOOLKIT_REMOVE_ADS_PRODUCT_ID=remove_ads
 ```
+
+Recommended locations:
+
+- `~/.gradle/gradle.properties` for local development
+- repository or organization secrets in CI
+
+Debug builds use Google demo ad units. Release builds disable ads and Google Play Billing unless the release properties above are provided.
+
+For a maintainer-facing checklist, see [docs/RELEASING.md](docs/RELEASING.md).
+
+## CI
+
+GitHub Actions runs `testDebugUnitTest` and `assembleDebug` on pushes to `main`, pull requests, and manual workflow dispatches. The workflow uploads the debug APK as an artifact for each successful run.
+
+## Privacy
+
+The current privacy policy lives at [PRIVACY_POLICY.md](PRIVACY_POLICY.md).
+
+## Project layout
+
+```text
 app/src/main/java/com/smarttoolkit/app/
-├── MainActivity.kt              # Single activity entry point
-├── SmartToolkitApp.kt           # Hilt application class
-├── navigation/                  # Route definitions and NavHost
-├── ui/
-│   ├── theme/                   # Material 3 theme, colors, typography
-│   ├── home/                    # Dashboard with search and favorites
-│   ├── settings/                # Dark mode and app settings
-│   ├── guide/                   # Searchable in-app User Guide
-│   ├── components/              # Shared UI components (PermissionHandler, UtilityTopBar)
-│   └── util/                    # Haptic feedback utility
-├── feature/                     # One package per utility
-│   ├── flashlight/
-│   ├── stopwatch/
-│   ├── timer/
-│   ├── calculator/
-│   ├── battery/
-│   ├── compass/
-│   ├── network/
-│   ├── storage/
-│   ├── ruler/
-│   ├── qrscanner/
-│   ├── unitconverter/
-│   ├── texttools/
-│   ├── randomgenerator/
-│   ├── notepad/
-│   ├── deviceinfo/
-│   ├── soundmeter/
-│   ├── bubblelevel/
-│   ├── tipcalculator/
-│   ├── tallycounter/
-│   ├── magnifyingglass/
-│   └── colorpicker/
-├── data/
-│   ├── db/                      # Room database, HistoryEntry/DAO, migrations
-│   └── preferences/             # DataStore preferences repository
-└── di/                          # Hilt modules (database, DataStore)
+|-- MainActivity.kt            # Single activity entry point
+|-- SmartToolkitApp.kt         # Hilt application class
+|-- navigation/                # Routes and NavHost wiring
+|-- ui/                        # Shared UI, theme, home, settings, user guide
+|-- feature/                   # One package per utility
+|-- data/                      # Room entities/DAOs and DataStore-backed preferences
+`-- di/                        # Hilt modules
 ```
 
 ## License
 
-See [LICENSE](LICENSE) for details.
+No open source license has been assigned yet. Until a `LICENSE` file is added, the repository is not licensed for reuse or redistribution.

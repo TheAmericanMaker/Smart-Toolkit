@@ -1,5 +1,6 @@
 package com.smarttoolkit.app.feature.calculator
 
+import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.ln
 import kotlin.math.log10
@@ -15,10 +16,9 @@ class CalculatorEngine {
             val tokens = tokenize(expression)
             val postfix = toPostfix(tokens)
             val result = evaluatePostfix(postfix)
-            if (result == result.toLong().toDouble()) result.toLong().toString()
-            else "%.10g".format(result)
+            formatResult(result)
         } catch (e: ArithmeticException) {
-            "Error: ${e.message}"
+            "Error: ${e.message ?: "Invalid result"}"
         } catch (_: Exception) {
             "Error"
         }
@@ -35,7 +35,11 @@ class CalculatorEngine {
     private fun tokenize(expr: String): List<Token> {
         val tokens = mutableListOf<Token>()
         var i = 0
-        val s = expr.replace(" ", "").replace("×", "*").replace("÷", "/").replace("π", "3.14159265358979")
+        val s = expr
+            .replace(" ", "")
+            .replace("\u00D7", "*")
+            .replace("\u00F7", "/")
+            .replace("\u03C0", Math.PI.toString())
 
         while (i < s.length) {
             val c = s[i]
@@ -45,18 +49,35 @@ class CalculatorEngine {
                     while (i < s.length && (s[i].isDigit() || s[i] == '.')) i++
                     tokens.add(Token.Num(s.substring(start, i).toDouble()))
                 }
-                c == '(' -> { tokens.add(Token.LParen); i++ }
-                c == ')' -> { tokens.add(Token.RParen); i++ }
+
+                c == '(' -> {
+                    tokens.add(Token.LParen)
+                    i++
+                }
+
+                c == ')' -> {
+                    tokens.add(Token.RParen)
+                    i++
+                }
+
                 c in "+-*/^%" -> {
                     if (c == '-' && (tokens.isEmpty() || tokens.last() is Token.LParen || tokens.last() is Token.Op)) {
-                        val start = i
-                        i++
-                        while (i < s.length && (s[i].isDigit() || s[i] == '.')) i++
-                        tokens.add(Token.Num(s.substring(start, i).toDouble()))
+                        if (i + 1 < s.length && (s[i + 1].isDigit() || s[i + 1] == '.')) {
+                            val start = i
+                            i++
+                            while (i < s.length && (s[i].isDigit() || s[i] == '.')) i++
+                            tokens.add(Token.Num(s.substring(start, i).toDouble()))
+                        } else {
+                            tokens.add(Token.Num(0.0))
+                            tokens.add(Token.Op("-"))
+                            i++
+                        }
                     } else {
-                        tokens.add(Token.Op(c.toString())); i++
+                        tokens.add(Token.Op(c.toString()))
+                        i++
                     }
                 }
+
                 c.isLetter() -> {
                     val start = i
                     while (i < s.length && s[i].isLetter()) i++
@@ -67,9 +88,11 @@ class CalculatorEngine {
                         else -> tokens.add(Token.Func(name))
                     }
                 }
+
                 else -> i++
             }
         }
+
         return tokens
     }
 
@@ -79,6 +102,8 @@ class CalculatorEngine {
         "^" -> 3
         else -> 0
     }
+
+    private fun isRightAssociative(op: String): Boolean = op == "^"
 
     private fun toPostfix(tokens: List<Token>): List<Token> {
         val output = mutableListOf<Token>()
@@ -96,15 +121,26 @@ class CalculatorEngine {
                     if (stack.isNotEmpty()) stack.removeLast()
                     if (stack.isNotEmpty() && stack.last() is Token.Func) output.add(stack.removeLast())
                 }
+
                 is Token.Op -> {
-                    while (stack.isNotEmpty() && stack.last() is Token.Op &&
-                        precedence((stack.last() as Token.Op).op) >= precedence(token.op)) {
+                    while (
+                        stack.isNotEmpty() &&
+                        stack.last() is Token.Op &&
+                        (
+                            precedence((stack.last() as Token.Op).op) > precedence(token.op) ||
+                                (
+                                    precedence((stack.last() as Token.Op).op) == precedence(token.op) &&
+                                        !isRightAssociative(token.op)
+                                    )
+                            )
+                    ) {
                         output.add(stack.removeLast())
                     }
                     stack.addLast(token)
                 }
             }
         }
+
         while (stack.isNotEmpty()) output.add(stack.removeLast())
         return output
     }
@@ -117,7 +153,7 @@ class CalculatorEngine {
                 is Token.Op -> {
                     val b = stack.removeLast()
                     val a = stack.removeLast()
-                    stack.addLast(when (token.op) {
+                    val result = when (token.op) {
                         "+" -> a + b
                         "-" -> a - b
                         "*" -> a * b
@@ -125,23 +161,56 @@ class CalculatorEngine {
                         "%" -> a % b
                         "^" -> a.pow(b)
                         else -> throw IllegalArgumentException("Unknown operator: ${token.op}")
-                    })
+                    }
+                    stack.addLast(validateResult(result))
                 }
+
                 is Token.Func -> {
                     val a = stack.removeLast()
-                    stack.addLast(when (token.name) {
+                    val result = when (token.name) {
                         "sin" -> sin(Math.toRadians(a))
                         "cos" -> cos(Math.toRadians(a))
                         "tan" -> tan(Math.toRadians(a))
-                        "log" -> log10(a)
-                        "ln" -> ln(a)
-                        "sqrt" -> sqrt(a)
+                        "log" -> {
+                            if (a <= 0.0) throw ArithmeticException("Invalid input")
+                            log10(a)
+                        }
+
+                        "ln" -> {
+                            if (a <= 0.0) throw ArithmeticException("Invalid input")
+                            ln(a)
+                        }
+
+                        "sqrt" -> {
+                            if (a < 0.0) throw ArithmeticException("Invalid input")
+                            sqrt(a)
+                        }
+
                         else -> throw IllegalArgumentException("Unknown function: ${token.name}")
-                    })
+                    }
+                    stack.addLast(validateResult(result))
                 }
+
                 else -> {}
             }
         }
-        return stack.last()
+
+        return stack.lastOrNull() ?: throw ArithmeticException("Invalid expression")
+    }
+
+    private fun validateResult(result: Double): Double {
+        if (!result.isFinite()) {
+            throw ArithmeticException("Invalid result")
+        }
+        return if (result == -0.0) 0.0 else result
+    }
+
+    private fun formatResult(result: Double): String {
+        val normalized = validateResult(result)
+        return if (normalized == normalized.toLong().toDouble()) {
+            normalized.toLong().toString()
+        } else {
+            String.format(Locale.US, "%.10g", normalized)
+        }
     }
 }

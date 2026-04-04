@@ -3,6 +3,7 @@ package com.smarttoolkit.app.ui.settings
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.smarttoolkit.app.BuildConfig
 import com.smarttoolkit.app.data.billing.BillingRepository
 import com.smarttoolkit.app.data.billing.BillingState
 import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
@@ -19,7 +20,10 @@ data class SettingsUiState(
     val darkMode: Boolean = false,
     val colorTheme: String = "DYNAMIC",
     val adsRemoved: Boolean = false,
-    val billingState: BillingState = BillingState.Idle
+    val billingState: BillingState = BillingState.Idle,
+    val billingAvailable: Boolean = false,
+    val removeAdsPrice: String? = null,
+    val appVersion: String = BuildConfig.VERSION_NAME
 )
 
 @HiltViewModel
@@ -33,14 +37,17 @@ class SettingsViewModel @Inject constructor(
         preferencesRepository.darkMode,
         preferencesRepository.colorTheme,
         preferencesRepository.adsRemoved,
-        billingRepository.billingState
+        billingRepository.billingState,
+        billingRepository.removeAdsPrice
     ) { values ->
         SettingsUiState(
             useSystemTheme = values[0] as Boolean,
             darkMode = values[1] as Boolean,
             colorTheme = values[2] as String,
             adsRemoved = values[3] as Boolean,
-            billingState = values[4] as BillingState
+            billingState = values[4] as BillingState,
+            billingAvailable = billingRepository.isBillingAvailable,
+            removeAdsPrice = values[5] as String?
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 

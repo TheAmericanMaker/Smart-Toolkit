@@ -149,7 +149,7 @@ The notepad is now the gold standard: rich editing, persistence, undo, voice inp
 - ✅ **Notepad checklist enhancements** — subcategories with indent/outdent, auto-capitalize first word, changeable icons (5 styles), numbered top-level items, auto-collapsing header, Next button focus fix
 - ✅ **Home screen** — scroll to favorites on app open
 - ✅ **Notes camera capture** — take photos directly from notes attachment UI (alongside gallery picker), with runtime camera permission handling
-- ✅ **CI workflow** — changed to manual-only trigger (workflow_dispatch) to save GitHub Actions minutes
+- ✅ **CI workflow** — builds unit tests and a debug APK on push, pull request, and manual runs
 
 ---
 

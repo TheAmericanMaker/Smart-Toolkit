@@ -6,6 +6,20 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+fun quote(value: String): String = "\"${value.replace("\"", "\\\"")}\""
+
+val releaseAdMobAppId = providers.gradleProperty("SMART_TOOLKIT_ADMOB_APP_ID")
+    .orElse(providers.environmentVariable("SMART_TOOLKIT_ADMOB_APP_ID"))
+    .orNull ?: ""
+val releaseBannerAdUnitId = providers.gradleProperty("SMART_TOOLKIT_ADMOB_BANNER_ID")
+    .orElse(providers.environmentVariable("SMART_TOOLKIT_ADMOB_BANNER_ID"))
+    .orNull ?: ""
+val releaseRemoveAdsProductId = providers.gradleProperty("SMART_TOOLKIT_REMOVE_ADS_PRODUCT_ID")
+    .orElse(providers.environmentVariable("SMART_TOOLKIT_REMOVE_ADS_PRODUCT_ID"))
+    .orNull ?: ""
+val releaseAdsEnabled = releaseAdMobAppId.isNotBlank() && releaseBannerAdUnitId.isNotBlank()
+val releaseBillingEnabled = releaseAdsEnabled && releaseRemoveAdsProductId.isNotBlank()
+
 android {
     namespace = "com.smarttoolkit.app"
     compileSdk = 35
@@ -22,14 +36,34 @@ android {
     defaultConfig {
         applicationId = "com.smarttoolkit.app"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+            buildConfigField("boolean", "ADS_ENABLED", "true")
+            buildConfigField(
+                "String",
+                "ADMOB_BANNER_AD_UNIT_ID",
+                quote("ca-app-pub-3940256099942544/9214589741")
+            )
+            buildConfigField("boolean", "REMOVE_ADS_PURCHASE_ENABLED", "false")
+            buildConfigField("String", "REMOVE_ADS_PRODUCT_ID", quote(""))
+        }
         release {
             isMinifyEnabled = true
+            manifestPlaceholders["admobAppId"] = releaseAdMobAppId
+            buildConfigField("boolean", "ADS_ENABLED", releaseAdsEnabled.toString())
+            buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", quote(releaseBannerAdUnitId))
+            buildConfigField(
+                "boolean",
+                "REMOVE_ADS_PURCHASE_ENABLED",
+                releaseBillingEnabled.toString()
+            )
+            buildConfigField("String", "REMOVE_ADS_PRODUCT_ID", quote(releaseRemoveAdsProductId))
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -45,15 +79,13 @@ android {
         jvmTarget = "17"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
+}
 
-    applicationVariants.all {
-        outputs.all {
-            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output.outputFileName = "smart-toolkit-${buildType.name}.apk"
-        }
-    }
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {

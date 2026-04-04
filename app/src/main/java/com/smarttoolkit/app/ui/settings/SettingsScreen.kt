@@ -173,6 +173,12 @@ fun SettingsScreen(
                         )
                     }
                 }
+            } else if (!state.billingAvailable) {
+                Text(
+                    "This build ships without Google Play purchases configured.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             } else {
                 Button(
                     onClick = { viewModel.purchaseRemoveAds(context as Activity) },
@@ -186,13 +192,21 @@ fun SettingsScreen(
                     )
                     Text(
                         if (state.billingState is BillingState.Pending) "Purchase Pending..."
-                        else "Remove Ads  \u2013  \$1.99"
+                        else state.removeAdsPrice?.let { "Remove Ads - $it" } ?: "Remove Ads"
+                    )
+                }
+                if (state.removeAdsPrice == null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Price loads from Google Play when the product is available.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 if (state.billingState is BillingState.Error) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "Purchase failed. Please try again.",
+                        (state.billingState as BillingState.Error).message,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -202,7 +216,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
             Text("About", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Smart Toolkit v1.0.0", style = MaterialTheme.typography.bodyLarge)
+            Text("Smart Toolkit v${state.appVersion}", style = MaterialTheme.typography.bodyLarge)
             Text(
                 "A collection of handy everyday tools.",
                 style = MaterialTheme.typography.bodySmall,

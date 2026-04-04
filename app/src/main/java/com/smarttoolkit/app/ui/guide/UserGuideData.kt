@@ -22,7 +22,7 @@ val userGuideData: List<GuideSection> = listOf(
             ),
             GuideEntry(
                 title = "Favorites",
-                content = "Tap the heart icon on any utility card to add it to your favorites. Favorites appear at the top of the home screen for quick access. Long-press the favorites section header to reorder them.",
+                content = "Tap the heart icon on any utility card to add it to your favorites. Favorites appear at the top of the home screen for quick access. Tap the reorder button in the Favorites header to rearrange them.",
                 tags = listOf("favorites", "heart", "reorder", "pin")
             ),
             GuideEntry(
