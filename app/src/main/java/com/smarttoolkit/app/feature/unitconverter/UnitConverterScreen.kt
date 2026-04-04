@@ -59,6 +59,7 @@ fun UnitConverterScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val history by viewModel.history.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var showHistory by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -166,7 +167,6 @@ fun UnitConverterScreen(
 
                 if (state.result.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    val context = LocalContext.current
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             modifier = Modifier.padding(16.dp),
