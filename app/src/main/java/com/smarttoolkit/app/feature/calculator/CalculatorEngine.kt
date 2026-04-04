@@ -77,7 +77,7 @@ class CalculatorEngine {
                     }
                 }
 
-                c == "\u03C0" -> {
+                c == '\u03C0' -> {
                     tokens.add(Token.Num(Math.PI))
                     i++
                 }
