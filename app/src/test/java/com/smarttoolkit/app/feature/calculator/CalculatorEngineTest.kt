@@ -24,6 +24,16 @@ class CalculatorEngineTest {
     }
 
     @Test
+    fun treatsPiSymbolAsStandaloneConstant() {
+        assertEquals("3.141592653589793", engine.evaluate("π"))
+    }
+
+    @Test
+    fun doesNotMergePiSymbolIntoAdjacentNumbers() {
+        assertEquals("Error", engine.evaluate("2π"))
+    }
+
+    @Test
     fun returnsReadableErrorForInvalidScientificInput() {
         assertEquals("Error: Invalid input", engine.evaluate("sqrt(-1)"))
     }
