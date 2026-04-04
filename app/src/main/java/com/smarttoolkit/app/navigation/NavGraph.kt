@@ -2,8 +2,8 @@ package com.smarttoolkit.app.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -41,7 +41,7 @@ fun NavGraph(
     navController: NavHostController,
     pendingRoute: MutableStateFlow<String?> = MutableStateFlow(null)
 ) {
-    val route by pendingRoute.collectAsState()
+    val route by pendingRoute.collectAsStateWithLifecycle()
     LaunchedEffect(route) {
         route?.let {
             navController.navigate(it) {

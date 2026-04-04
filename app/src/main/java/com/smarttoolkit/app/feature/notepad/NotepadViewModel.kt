@@ -13,6 +13,7 @@ import com.smarttoolkit.app.data.model.NoteImage
 import com.smarttoolkit.app.data.model.NoteType
 import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import com.smarttoolkit.app.data.repository.NoteRepository
+import com.smarttoolkit.app.feature.notepad.smart.ImageTextExtractor
 import com.smarttoolkit.app.feature.notepad.smart.NoteCategorizer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -55,6 +56,7 @@ data class NoteEditUiState(
     val iconStyle: String = "CHECKBOX",
     val checklistItems: List<ChecklistItemUiState> = emptyList(),
     val images: List<NoteImageUiState> = emptyList(),
+    val createdAt: Long = System.currentTimeMillis(),
     val isNew: Boolean = true,
     val isLoaded: Boolean = false
 )
@@ -116,6 +118,7 @@ class NotepadViewModel @Inject constructor(
                         images = note.images.map {
                             NoteImageUiState(id = it.id, filePath = it.filePath)
                         },
+                        createdAt = note.createdAt,
                         isNew = false,
                         isLoaded = true
                     )
@@ -285,7 +288,7 @@ class NotepadViewModel @Inject constructor(
 
     fun onExtractedText(text: String) {
         val state = _uiState.value
-        val lines = com.smarttoolkit.app.feature.notepad.smart.ImageTextExtractor.splitIntoItems(text)
+        val lines = ImageTextExtractor.splitIntoItems(text)
             .map { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase() else c.toString() } }
         if (state.type == NoteType.CHECKLIST) {
             val items = state.checklistItems.toMutableList()
@@ -393,7 +396,8 @@ class NotepadViewModel @Inject constructor(
                 images = state.images.mapIndexed { index, img ->
                     NoteImage(id = img.id, filePath = img.filePath, position = index)
                 },
-                createdAt = if (savedNoteId > 0) state.let { System.currentTimeMillis() } else System.currentTimeMillis()
+                createdAt = state.createdAt,
+                updatedAt = System.currentTimeMillis()
             )
 
             val id = repository.saveNote(note)

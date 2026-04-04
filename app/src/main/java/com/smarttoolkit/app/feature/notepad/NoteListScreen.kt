@@ -64,7 +64,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.flow.collect
 import com.smarttoolkit.app.data.model.NoteType
 import com.smarttoolkit.app.ui.components.UtilityTopBar
 import kotlinx.coroutines.launch

@@ -86,7 +86,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import com.smarttoolkit.app.data.model.NoteType
 import com.smarttoolkit.app.feature.notepad.components.ChecklistItemRow

@@ -8,7 +8,6 @@ import com.smarttoolkit.app.data.billing.BillingRepository
 import com.smarttoolkit.app.data.billing.BillingState
 import com.smarttoolkit.app.data.preferences.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
