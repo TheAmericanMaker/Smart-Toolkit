@@ -39,7 +39,6 @@ class CalculatorEngine {
             .replace(" ", "")
             .replace("\u00D7", "*")
             .replace("\u00F7", "/")
-            .replace("\u03C0", Math.PI.toString())
 
         while (i < s.length) {
             val c = s[i]
@@ -76,6 +75,11 @@ class CalculatorEngine {
                         tokens.add(Token.Op(c.toString()))
                         i++
                     }
+                }
+
+                c == "\u03C0" -> {
+                    tokens.add(Token.Num(Math.PI))
+                    i++
                 }
 
                 c.isLetter() -> {
