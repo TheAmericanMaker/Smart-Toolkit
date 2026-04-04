@@ -12,14 +12,15 @@ The app stores the following information locally on your device so features can 
 - favorites, theme choices, and other settings
 - utility-specific history such as calculator history, QR scan history, and saved palettes
 
-If Android device backup is enabled on your device, app preferences and local databases may also be included in Android's backup or device-transfer systems according to the app's backup rules.
+If Android device backup is enabled on your device, app preferences, local databases, and note attachments may also be included in Android's backup or device-transfer systems according to the app's backup rules.
 
 ## Optional third-party services
 
-Some builds of Smart Toolkit may be configured with third-party monetization services:
+Some builds of Smart Toolkit may be configured with third-party services:
 
 - **Google AdMob:** Builds with AdMob enabled may request ads. Google may process device identifiers, IP address, diagnostics, and ad interaction data under its own policies.
 - **Google Play Billing:** Builds with in-app purchases enabled use Google Play to process purchases. We do not receive your raw payment card information.
+- **Speech recognition provider:** When you use Notepad voice input, speech recognition may be handled by your device or its configured provider. Spoken audio and transcripts may be processed under that provider's own policies.
 
 For more information, see:
 
@@ -44,13 +45,13 @@ We do not send sensor, camera, microphone, note, or settings data to our own ser
 
 - We do not sell your personal information.
 - We do not run our own analytics or app backend for Smart Toolkit.
-- Data leaves your device only when you explicitly export or share something, or when a build is configured to use Google services such as AdMob or Google Play Billing.
+- Data leaves your device only when you explicitly export or share something, when you use voice input handled by your device's speech recognition provider, or when a build is configured to use Google services such as AdMob or Google Play Billing.
 
 ## Your choices
 
 - Revoke permissions at any time from **Settings > Apps > Smart Toolkit > Permissions**.
 - Clear app data or uninstall the app to remove local app storage.
-- Disable Android device backup if you do not want app data included in system backups.
+- Disable Android device backup if you do not want app data, including note attachments, included in system backups.
 - Disable ad personalization through your Google account or device settings when using a build that includes AdMob.
 
 ## Children's privacy

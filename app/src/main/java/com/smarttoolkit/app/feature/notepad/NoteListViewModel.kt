@@ -120,7 +120,8 @@ class NoteListViewModel @Inject constructor(
                 val result = exportImportManager.importNotes(appContext, uri)
                 _toastMessage.emit("Imported ${result.notesImported} notes, ${result.imagesImported} images")
             } catch (e: Exception) {
-                _toastMessage.emit("Import failed: ${e.message}")
+                val message = e.message ?: "The selected backup file is invalid."
+                _toastMessage.emit("Import failed: $message")
             }
         }
     }

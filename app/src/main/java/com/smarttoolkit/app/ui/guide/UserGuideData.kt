@@ -257,12 +257,12 @@ val userGuideData: List<GuideSection> = listOf(
             ),
             GuideEntry(
                 title = "Voice Input & Images",
-                content = "Tap the microphone icon next to the title or content field to dictate text. Tap the image button to attach a photo. Tap an attached image to view it fullscreen with OCR text extraction.",
+                content = "Tap the microphone icon next to the title or content field to dictate text. The first time you use voice input, Smart Toolkit explains that speech recognition may be handled by your device or its configured provider. Tap the image button to attach a photo. Tap an attached image to view it fullscreen with OCR text extraction.",
                 tags = listOf("notepad", "voice", "dictation", "image", "photo", "ocr")
             ),
             GuideEntry(
                 title = "Export & Import",
-                content = "From the note list, tap the three-dot menu to Export (saves all notes as a ZIP file) or Import (restores from a previously exported ZIP).",
+                content = "From the note list, tap the three-dot menu to Export (saves all notes as a ZIP file) or Import (restores from a previously exported ZIP). If Android device backup is enabled, note attachments may also be included in your device's backup or transfer flow.",
                 tags = listOf("notepad", "export", "import", "backup", "zip")
             )
         )
@@ -367,7 +367,7 @@ val userGuideData: List<GuideSection> = listOf(
             ),
             GuideEntry(
                 title = "Microphone",
-                content = "Required by Sound Meter and Notepad voice input. Grant access when prompted to enable audio recording and dictation.",
+                content = "Required by Sound Meter and Notepad voice input. Grant access when prompted to enable audio recording and dictation. Depending on your device, Notepad voice input may use your configured speech recognition provider.",
                 tags = listOf("permission", "microphone", "audio", "voice")
             ),
             GuideEntry(

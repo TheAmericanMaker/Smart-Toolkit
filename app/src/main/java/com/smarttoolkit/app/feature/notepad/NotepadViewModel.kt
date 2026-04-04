@@ -79,9 +79,19 @@ class NotepadViewModel @Inject constructor(
     val showOcrHint: StateFlow<Boolean> = preferencesRepository.ocrHintShown
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val dictationDisclosureAcknowledged: StateFlow<Boolean> =
+        preferencesRepository.dictationDisclosureAcknowledged
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     fun dismissOcrHint() {
         viewModelScope.launch {
             preferencesRepository.setOcrHintShown()
+        }
+    }
+
+    fun acknowledgeDictationDisclosure() {
+        viewModelScope.launch {
+            preferencesRepository.acknowledgeDictationDisclosure()
         }
     }
 

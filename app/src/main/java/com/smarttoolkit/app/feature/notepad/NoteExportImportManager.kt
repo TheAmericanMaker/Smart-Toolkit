@@ -2,18 +2,17 @@ package com.smarttoolkit.app.feature.notepad
 
 import android.content.Context
 import android.net.Uri
+import androidx.room.withTransaction
+import com.smarttoolkit.app.data.db.AppDatabase
 import com.smarttoolkit.app.data.db.NoteImageEntity
-import com.smarttoolkit.app.data.model.ChecklistItem
 import com.smarttoolkit.app.data.model.Note
-import com.smarttoolkit.app.data.model.NoteImage
-import com.smarttoolkit.app.data.model.NoteType
 import com.smarttoolkit.app.data.repository.NoteRepository
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedOutputStream
 import java.io.File
+import java.io.IOException
 import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,7 +21,8 @@ data class ImportResult(val notesImported: Int, val imagesImported: Int)
 
 @Singleton
 class NoteExportImportManager @Inject constructor(
-    private val repository: NoteRepository
+    private val repository: NoteRepository,
+    private val appDatabase: AppDatabase
 ) {
 
     suspend fun exportNotes(context: Context, uri: Uri) {
@@ -52,40 +52,23 @@ class NoteExportImportManager @Inject constructor(
     }
 
     suspend fun importNotes(context: Context, uri: Uri): ImportResult {
-        var notesImported = 0
-        var imagesImported = 0
-        val imageDir = File(context.filesDir, "note_images")
-        imageDir.mkdirs()
-
-        context.contentResolver.openInputStream(uri)?.use { inputStream ->
-            ZipInputStream(inputStream).use { zip ->
-                var jsonContent: String? = null
-                val imageFiles = mutableMapOf<String, ByteArray>()
-
-                var entry = zip.nextEntry
-                while (entry != null) {
-                    when {
-                        entry.name == "notes.json" -> {
-                            jsonContent = zip.readBytes().toString(Charsets.UTF_8)
-                        }
-                        entry.name.startsWith("images/") -> {
-                            val fileName = entry.name.removePrefix("images/")
-                            imageFiles[fileName] = zip.readBytes()
-                        }
-                    }
-                    zip.closeEntry()
-                    entry = zip.nextEntry
-                }
-
-                if (jsonContent != null) {
-                    val result = parseAndImport(context, jsonContent, imageFiles)
-                    notesImported = result.notesImported
-                    imagesImported = result.imagesImported
-                }
+        val stagingDir = File(context.cacheDir, "note_import_${System.currentTimeMillis()}")
+        return try {
+            val validatedArchive = try {
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    NoteImportArchive.stageValidatedArchive(inputStream, stagingDir)
+                } ?: throw ImportValidationException("Could not read the selected backup file.")
+            } catch (e: ImportValidationException) {
+                throw e
+            } catch (_: IOException) {
+                throw ImportValidationException("Could not read the selected backup file.")
+            } catch (_: Exception) {
+                throw ImportValidationException("Could not read the selected backup file.")
             }
+            persistValidatedArchive(context, validatedArchive)
+        } finally {
+            stagingDir.deleteRecursively()
         }
-
-        return ImportResult(notesImported, imagesImported)
     }
 
     private fun buildExportJson(notes: List<Note>, allImages: List<NoteImageEntity>): JSONObject {
@@ -137,83 +120,46 @@ class NoteExportImportManager @Inject constructor(
         return root
     }
 
-    private suspend fun parseAndImport(
+    private suspend fun persistValidatedArchive(
         context: Context,
-        jsonContent: String,
-        imageFiles: Map<String, ByteArray>
+        archive: ValidatedNoteImportArchive
     ): ImportResult {
-        var notesImported = 0
-        var imagesImported = 0
         val imageDir = File(context.filesDir, "note_images")
+        imageDir.mkdirs()
+        val createdFiles = mutableListOf<File>()
 
-        val root = JSONObject(jsonContent)
-        val notesArray = root.getJSONArray("notes")
+        return try {
+            appDatabase.withTransaction {
+                var notesImported = 0
+                var imagesImported = 0
 
-        for (i in 0 until notesArray.length()) {
-            val noteJson = notesArray.getJSONObject(i)
+                for (bundle in archive.notes) {
+                    val noteId = repository.importNote(bundle.note)
+                    notesImported++
 
-            val checklistItems = mutableListOf<ChecklistItem>()
-            if (noteJson.has("checklistItems")) {
-                val itemsArray = noteJson.getJSONArray("checklistItems")
-                for (j in 0 until itemsArray.length()) {
-                    val itemJson = itemsArray.getJSONObject(j)
-                    checklistItems.add(
-                        ChecklistItem(
-                            text = itemJson.getString("text"),
-                            isChecked = itemJson.getBoolean("isChecked"),
-                            position = itemJson.getInt("position"),
-                            indentLevel = itemJson.optInt("indentLevel", 0)
-                        )
-                    )
-                }
-            }
-
-            val type = try {
-                NoteType.valueOf(noteJson.getString("type"))
-            } catch (_: Exception) {
-                NoteType.TEXT
-            }
-
-            val note = Note(
-                title = noteJson.getString("title"),
-                content = noteJson.optString("content", ""),
-                type = type,
-                category = if (noteJson.isNull("category")) null else noteJson.optString("category"),
-                isPinned = noteJson.optBoolean("isPinned", false),
-                iconStyle = noteJson.optString("iconStyle", "CHECKBOX"),
-                checklistItems = checklistItems,
-                createdAt = noteJson.optLong("createdAt", System.currentTimeMillis()),
-                updatedAt = noteJson.optLong("updatedAt", System.currentTimeMillis())
-            )
-
-            val noteId = repository.importNote(note)
-            notesImported++
-
-            // Import images
-            if (noteJson.has("images")) {
-                val imagesArray = noteJson.getJSONArray("images")
-                for (j in 0 until imagesArray.length()) {
-                    val imageJson = imagesArray.getJSONObject(j)
-                    val filename = imageJson.getString("filename")
-                    val position = imageJson.getInt("position")
-
-                    val imageBytes = imageFiles[filename]
-                    if (imageBytes != null) {
-                        val outFile = File(imageDir, filename)
-                        outFile.writeBytes(imageBytes)
+                    for (imageRef in bundle.images) {
+                        val stagedImage = archive.stagedImages[imageRef.archiveName]
+                            ?: throw ImportValidationException("Backup is missing an attached image.")
+                        val fileName = NoteImportArchive.generateImportedFileName(imageRef.archiveName)
+                        val outFile = File(imageDir, fileName)
+                        stagedImage.stagedFile.copyTo(outFile, overwrite = false)
+                        createdFiles.add(outFile)
                         repository.insertImageEntity(
                             NoteImageEntity(
                                 noteId = noteId,
-                                filePath = filename,
-                                position = position
+                                filePath = fileName,
+                                position = imageRef.position
                             )
                         )
                         imagesImported++
                     }
                 }
-            }
-        }
 
-        return ImportResult(notesImported, imagesImported)
+                ImportResult(notesImported = notesImported, imagesImported = imagesImported)
+            }
+        } catch (e: Exception) {
+            createdFiles.forEach { it.delete() }
+            throw e
+        }
     }
 }

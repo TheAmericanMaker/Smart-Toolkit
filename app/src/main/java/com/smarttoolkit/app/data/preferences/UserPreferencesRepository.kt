@@ -22,6 +22,8 @@ class UserPreferencesRepository @Inject constructor(
         val USE_SYSTEM_THEME = booleanPreferencesKey("use_system_theme")
         val COLOR_THEME = stringPreferencesKey("color_theme")
         val OCR_HINT_SHOWN = booleanPreferencesKey("ocr_hint_shown")
+        val DICTATION_DISCLOSURE_ACKNOWLEDGED =
+            booleanPreferencesKey("dictation_disclosure_acknowledged")
 
         // Utility persistence keys
         val TALLY_COUNT = intPreferencesKey("tally_count")
@@ -53,12 +55,19 @@ class UserPreferencesRepository @Inject constructor(
     }
 
     val ocrHintShown: Flow<Boolean> = dataStore.data.map { it[OCR_HINT_SHOWN] ?: false }
+    val dictationDisclosureAcknowledged: Flow<Boolean> = dataStore.data.map {
+        it[DICTATION_DISCLOSURE_ACKNOWLEDGED] ?: false
+    }
     val adsRemoved: Flow<Boolean> = dataStore.data.map { it[ADS_REMOVED] ?: false }
 
     suspend fun setAdsRemoved(removed: Boolean) { dataStore.edit { it[ADS_REMOVED] = removed } }
 
     suspend fun setOcrHintShown() {
         dataStore.edit { it[OCR_HINT_SHOWN] = true }
+    }
+
+    suspend fun acknowledgeDictationDisclosure() {
+        dataStore.edit { it[DICTATION_DISCLOSURE_ACKNOWLEDGED] = true }
     }
 
     suspend fun setDarkMode(enabled: Boolean) {

@@ -79,7 +79,7 @@ For a maintainer-facing checklist, see [docs/RELEASING.md](docs/RELEASING.md).
 
 ## CI
 
-GitHub Actions runs `testDebugUnitTest` and `assembleDebug` on pushes to `main`, pull requests, and manual workflow dispatches. The workflow uploads the debug APK as an artifact for each successful run.
+GitHub Actions runs `testDebugUnitTest`, `assembleDebug`, and `bundleRelease` on pushes to `main`, pull requests, and manual workflow dispatches. The workflow uploads the debug APK and release bundle as artifacts for each successful run.
 
 ## Privacy
 

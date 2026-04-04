@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,6 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import com.smarttoolkit.app.data.model.NoteType
 import com.smarttoolkit.app.feature.notepad.components.ChecklistItemRow
@@ -103,12 +105,16 @@ fun NoteEditScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val ocrHintShown by viewModel.showOcrHint.collectAsStateWithLifecycle()
+    val dictationDisclosureAcknowledged by
+        viewModel.dictationDisclosureAcknowledged.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showTemplates by rememberSaveable { mutableStateOf(false) }
     var viewingImageIndex by remember { mutableIntStateOf(-1) }
     var contentFieldValue by remember { mutableStateOf(TextFieldValue(state.content)) }
+    var showDictationDisclosure by rememberSaveable { mutableStateOf(false) }
+    var pendingDictationTarget by rememberSaveable { mutableStateOf<String?>(null) }
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val isHeaderCollapsed by remember {
@@ -233,19 +239,76 @@ fun NoteEditScreen(
         }
     }
 
-    val launchDictation: (String) -> Unit = { target ->
+    val launchDictationInternal: (String) -> Unit = { target ->
         dictationTarget = target
         val prompt = if (target == "title") "Speak your title..." else "Speak your note..."
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PROMPT, prompt)
         }
-        speechLauncher.launch(intent)
+        try {
+            speechLauncher.launch(intent)
+        } catch (_: Exception) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Speech recognition is unavailable on this device.")
+            }
+        }
+    }
+
+    val launchDictation: (String) -> Unit = { target ->
+        if (dictationDisclosureAcknowledged) {
+            launchDictationInternal(target)
+        } else {
+            pendingDictationTarget = target
+            showDictationDisclosure = true
+        }
     }
 
     BackHandler {
         viewModel.save()
         onBack()
+    }
+
+    if (showDictationDisclosure) {
+        AlertDialog(
+            onDismissRequest = {
+                showDictationDisclosure = false
+                pendingDictationTarget = null
+            },
+            title = { Text("Voice input disclosure") },
+            text = {
+                Text(
+                    "Voice input uses your device's speech recognition provider. " +
+                        "Depending on your device, spoken audio and transcripts may " +
+                        "be processed by that provider under its privacy terms."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val target = pendingDictationTarget
+                        showDictationDisclosure = false
+                        pendingDictationTarget = null
+                        viewModel.acknowledgeDictationDisclosure()
+                        if (target != null) {
+                            launchDictationInternal(target)
+                        }
+                    }
+                ) {
+                    Text("Continue")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDictationDisclosure = false
+                        pendingDictationTarget = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     // Template picker
