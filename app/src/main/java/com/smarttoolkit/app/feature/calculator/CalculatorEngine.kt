@@ -1,6 +1,6 @@
 package com.smarttoolkit.app.feature.calculator
 
-import java.util.Locale
+import java.math.BigDecimal
 import kotlin.math.cos
 import kotlin.math.ln
 import kotlin.math.log10
@@ -210,7 +210,7 @@ class CalculatorEngine {
         return if (normalized == normalized.toLong().toDouble()) {
             normalized.toLong().toString()
         } else {
-            String.format(Locale.US, "%.10g", normalized)
+            BigDecimal.valueOf(normalized).stripTrailingZeros().toPlainString()
         }
     }
 }
