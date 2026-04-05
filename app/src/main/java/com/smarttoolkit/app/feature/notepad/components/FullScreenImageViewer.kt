@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -106,48 +106,54 @@ fun FullScreenImageViewer(
 
             // Extract text button
             if (onTextExtracted != null) {
-                FilledTonalButton(
-                    onClick = {
-                        if (!isExtracting) {
-                            isExtracting = true
-                            scope.launch {
-                                try {
-                                    val text = ImageTextExtractor.extractText(imageFile)
-                                    if (text.isNotBlank()) {
-                                        onTextExtracted(text)
-                                        onDismiss()
-                                    }
-                                } catch (_: Exception) {
-                                    // OCR failed silently
-                                } finally {
-                                    isExtracting = false
-                                }
-                            }
-                        }
-                    },
+                Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(horizontal = 24.dp, vertical = 24.dp),
-                    enabled = !isExtracting
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    FilledTonalButton(
+                        onClick = {
+                            if (!isExtracting) {
+                                isExtracting = true
+                                scope.launch {
+                                    try {
+                                        val text = ImageTextExtractor.extractText(imageFile)
+                                        if (text.isNotBlank()) {
+                                            onTextExtracted(text)
+                                            onDismiss()
+                                        }
+                                    } catch (_: Exception) {
+                                        // OCR failed silently
+                                    } finally {
+                                        isExtracting = false
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(bottom = 72.dp),
+                        enabled = !isExtracting
                     ) {
-                        if (isExtracting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp
-                            )
-                            Text("Extracting text...")
-                        } else {
-                            Icon(
-                                imageVector = Icons.Filled.DocumentScanner,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text("Extract text")
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isExtracting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp
+                                )
+                                Text("Extracting text...")
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Filled.DocumentScanner,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text("Extract text")
+                            }
                         }
                     }
                 }
