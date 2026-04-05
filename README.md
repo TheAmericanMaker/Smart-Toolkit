@@ -12,7 +12,7 @@ Provided by **The American Maker & Claude Code**
 - Modern Android stack: Kotlin, Jetpack Compose, Material 3, Hilt, Room, DataStore, CameraX, and ML Kit
 - Local-first data model: notes, favorites, history, and settings stay on-device
 - Searchable in-app user guide under **Settings > Help > User Guide**
-- Optional AdMob and Google Play Billing support for release builds, with safe defaults for public source builds
+- No ads or in-app purchases
 
 ## Included utilities
 
@@ -57,29 +57,13 @@ The release bundle is written to `app/build/outputs/bundle/release/app-release.a
 
 Release builds require:
 
-- a signing configuration for your release key
-- optional AdMob and Google Play Billing configuration if you want ads and the "Remove Ads" purchase enabled
-
-Release monetization is configured with Gradle properties or environment variables:
-
-```properties
-SMART_TOOLKIT_ADMOB_APP_ID=ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy
-SMART_TOOLKIT_ADMOB_BANNER_ID=ca-app-pub-xxxxxxxxxxxxxxxx/zzzzzzzzzz
-SMART_TOOLKIT_REMOVE_ADS_PRODUCT_ID=remove_ads
-```
-
-Recommended locations:
-
-- `~/.gradle/gradle.properties` for local development
-- repository or organization secrets in CI
-
-Debug builds use Google demo ad units. Release builds disable ads and Google Play Billing unless the release properties above are provided.
+- a signing configuration for your release key if you plan to distribute a signed release build
 
 For a maintainer-facing checklist, see [docs/RELEASING.md](docs/RELEASING.md).
 
 ## CI
 
-GitHub Actions runs `testDebugUnitTest`, `assembleDebug`, and `bundleRelease` on pushes to `main`, pull requests, and manual workflow dispatches. The workflow uploads the debug APK and release bundle as artifacts for each successful run.
+GitHub Actions runs `testDebugUnitTest`, `assembleDebug`, and `bundleRelease` only when triggered manually through `workflow_dispatch`. The workflow uploads the debug APK and release bundle as artifacts for each successful run.
 
 ## Privacy
 

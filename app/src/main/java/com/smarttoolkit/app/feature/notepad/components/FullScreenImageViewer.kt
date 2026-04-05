@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -126,7 +127,8 @@ fun FullScreenImageViewer(
                     },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(32.dp),
+                        .navigationBarsPadding()
+                        .padding(horizontal = 24.dp, vertical = 24.dp),
                     enabled = !isExtracting
                 ) {
                     Row(

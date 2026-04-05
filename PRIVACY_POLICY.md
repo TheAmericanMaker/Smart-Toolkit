@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated:** April 3, 2026
+**Last updated:** April 4, 2026
 
 Smart Toolkit is designed as a local-first Android app. We do not operate an app backend, and we do not collect your notes, settings, or usage history on our own servers.
 
@@ -16,17 +16,13 @@ If Android device backup is enabled on your device, app preferences, local datab
 
 ## Optional third-party services
 
-Some builds of Smart Toolkit may be configured with third-party services:
+Smart Toolkit does not include ads, in-app purchases, or its own backend services.
 
-- **Google AdMob:** Builds with AdMob enabled may request ads. Google may process device identifiers, IP address, diagnostics, and ad interaction data under its own policies.
-- **Google Play Billing:** Builds with in-app purchases enabled use Google Play to process purchases. We do not receive your raw payment card information.
 - **Speech recognition provider:** When you use Notepad voice input, speech recognition may be handled by your device or its configured provider. Spoken audio and transcripts may be processed under that provider's own policies.
 
 For more information, see:
 
 - [Google Privacy Policy](https://policies.google.com/privacy)
-- [Google AdMob policies](https://support.google.com/admob/answer/6128543)
-- [Google Play Billing overview](https://developer.android.com/google/play/billing)
 
 ## Permissions
 
@@ -35,7 +31,7 @@ Smart Toolkit requests permissions only for features that need them:
 - **Camera:** QR Scanner, Magnifier, Color Picker, and note photo attachments
 - **Microphone:** Sound Meter and note voice input
 - **Notifications:** timer, stopwatch, flashlight, and tally counter foreground notifications
-- **Network access:** network utility features, plus AdMob or Google Play Billing when those integrations are enabled
+- **Network access:** network utility features
 - **Vibration:** alarms and haptic feedback
 - **Device sensors:** compass and bubble level
 
@@ -45,14 +41,13 @@ We do not send sensor, camera, microphone, note, or settings data to our own ser
 
 - We do not sell your personal information.
 - We do not run our own analytics or app backend for Smart Toolkit.
-- Data leaves your device only when you explicitly export or share something, when you use voice input handled by your device's speech recognition provider, or when a build is configured to use Google services such as AdMob or Google Play Billing.
+- Data leaves your device only when you explicitly export or share something, or when you use voice input handled by your device's speech recognition provider.
 
 ## Your choices
 
 - Revoke permissions at any time from **Settings > Apps > Smart Toolkit > Permissions**.
 - Clear app data or uninstall the app to remove local app storage.
 - Disable Android device backup if you do not want app data, including note attachments, included in system backups.
-- Disable ad personalization through your Google account or device settings when using a build that includes AdMob.
 
 ## Children's privacy
 

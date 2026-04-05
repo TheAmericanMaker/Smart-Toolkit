@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
-import com.smarttoolkit.app.ui.components.AdBanner
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -41,7 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.smarttoolkit.app.BuildConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,9 +52,10 @@ fun HomeScreen(
     var showReorderDialog by remember { mutableStateOf(false) }
     val gridState = rememberLazyGridState()
 
-    // Scroll to top (favorites) when the screen first loads
-    LaunchedEffect(Unit) {
-        gridState.scrollToItem(0)
+    LaunchedEffect(state.favoriteUtilities.isNotEmpty(), state.searchQuery) {
+        if (state.searchQuery.isBlank() && state.favoriteUtilities.isNotEmpty()) {
+            gridState.scrollToItem(0)
+        }
     }
 
     if (showReorderDialog) {
@@ -176,10 +175,6 @@ fun HomeScreen(
                         onFavoriteToggle = { viewModel.toggleFavorite(utility.id) }
                     )
                 }
-            }
-
-            if (BuildConfig.ADS_ENABLED && !state.adsRemoved) {
-                AdBanner(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
         }
     }

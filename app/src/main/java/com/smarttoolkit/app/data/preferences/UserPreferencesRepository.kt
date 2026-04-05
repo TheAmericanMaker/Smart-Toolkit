@@ -24,6 +24,7 @@ class UserPreferencesRepository @Inject constructor(
         val OCR_HINT_SHOWN = booleanPreferencesKey("ocr_hint_shown")
         val DICTATION_DISCLOSURE_ACKNOWLEDGED =
             booleanPreferencesKey("dictation_disclosure_acknowledged")
+        val LAST_ACTIVE_ROUTE = stringPreferencesKey("last_active_route")
 
         // Utility persistence keys
         val TALLY_COUNT = intPreferencesKey("tally_count")
@@ -38,7 +39,6 @@ class UserPreferencesRepository @Inject constructor(
         val TIMER_ALARM_SOUND = stringPreferencesKey("timer_alarm_sound")
         val TIMER_REPEAT = booleanPreferencesKey("timer_repeat")
         val SOUND_METER_OFFSET = floatPreferencesKey("sound_meter_offset")
-        val ADS_REMOVED = booleanPreferencesKey("ads_removed")
 
         // Stopwatch persistence
         val STOPWATCH_ACCUMULATED_MS = stringPreferencesKey("stopwatch_accumulated_ms")
@@ -58,9 +58,7 @@ class UserPreferencesRepository @Inject constructor(
     val dictationDisclosureAcknowledged: Flow<Boolean> = dataStore.data.map {
         it[DICTATION_DISCLOSURE_ACKNOWLEDGED] ?: false
     }
-    val adsRemoved: Flow<Boolean> = dataStore.data.map { it[ADS_REMOVED] ?: false }
-
-    suspend fun setAdsRemoved(removed: Boolean) { dataStore.edit { it[ADS_REMOVED] = removed } }
+    val lastActiveRoute: Flow<String?> = dataStore.data.map { it[LAST_ACTIVE_ROUTE] }
 
     suspend fun setOcrHintShown() {
         dataStore.edit { it[OCR_HINT_SHOWN] = true }
@@ -68,6 +66,16 @@ class UserPreferencesRepository @Inject constructor(
 
     suspend fun acknowledgeDictationDisclosure() {
         dataStore.edit { it[DICTATION_DISCLOSURE_ACKNOWLEDGED] = true }
+    }
+
+    suspend fun setLastActiveRoute(route: String?) {
+        dataStore.edit {
+            if (route.isNullOrBlank()) {
+                it.remove(LAST_ACTIVE_ROUTE)
+            } else {
+                it[LAST_ACTIVE_ROUTE] = route
+            }
+        }
     }
 
     suspend fun setDarkMode(enabled: Boolean) {

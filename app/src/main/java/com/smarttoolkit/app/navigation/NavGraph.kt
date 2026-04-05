@@ -3,13 +3,16 @@ package com.smarttoolkit.app.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import com.smarttoolkit.app.feature.battery.BatteryScreen
 import com.smarttoolkit.app.feature.bubblelevel.BubbleLevelScreen
 import com.smarttoolkit.app.feature.colorpicker.ColorPickerScreen
@@ -41,7 +44,15 @@ fun NavGraph(
     navController: NavHostController,
     pendingRoute: MutableStateFlow<String?> = MutableStateFlow(null)
 ) {
+    val navigationStateViewModel: NavigationStateViewModel = hiltViewModel()
     val route by pendingRoute.collectAsStateWithLifecycle()
+
+    LaunchedEffect(navController) {
+        navController.currentBackStackEntryFlow.collect { entry ->
+            navigationStateViewModel.onDestinationChanged(entry.toRestorableRoute())
+        }
+    }
+
     LaunchedEffect(route) {
         route?.let {
             navController.navigate(it) {
@@ -144,5 +155,24 @@ fun NavGraph(
         composable(Screen.ColorPicker.route) {
             ColorPickerScreen(onBack = { navController.popBackStack() })
         }
+    }
+}
+
+private fun NavBackStackEntry.toRestorableRoute(): String? {
+    return when (destination.route) {
+        Screen.Settings.route,
+        Screen.UserGuide.route -> null
+
+        Screen.NoteEdit.route -> {
+            val noteId = arguments?.getString("noteId")?.toLongOrNull() ?: return Screen.NoteList.route
+            val type = arguments?.getString("type") ?: "TEXT"
+            if (noteId > 0) {
+                Screen.NoteEdit.createRoute(noteId)
+            } else {
+                Screen.NoteEdit.createNewRoute(type)
+            }
+        }
+
+        else -> destination.route
     }
 }
