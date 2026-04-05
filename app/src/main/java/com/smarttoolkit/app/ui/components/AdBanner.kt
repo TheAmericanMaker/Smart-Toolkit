@@ -3,6 +3,7 @@ package com.smarttoolkit.app.ui.components
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
@@ -19,27 +20,21 @@ fun AdBanner(modifier: Modifier = Modifier) {
 
     val configuration = LocalConfiguration.current
 
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context: Context ->
-            AdView(context).apply {
-                setAdSize(
-                    AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
-                        context,
-                        configuration.screenWidthDp
+    key(configuration.screenWidthDp) {
+        AndroidView(
+            modifier = modifier.fillMaxWidth(),
+            factory = { context: Context ->
+                AdView(context).apply {
+                    setAdSize(
+                        AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+                            context,
+                            configuration.screenWidthDp
+                        )
                     )
-                )
-                adUnitId = BuildConfig.ADMOB_BANNER_AD_UNIT_ID
-                loadAd(AdRequest.Builder().build())
+                    adUnitId = BuildConfig.ADMOB_BANNER_AD_UNIT_ID
+                    loadAd(AdRequest.Builder().build())
+                }
             }
-        },
-        update = { adView ->
-            adView.setAdSize(
-                AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
-                    adView.context,
-                    configuration.screenWidthDp
-                )
-            )
-        }
-    )
+        )
+    }
 }
