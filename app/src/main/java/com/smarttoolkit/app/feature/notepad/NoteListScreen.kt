@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -59,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -86,6 +88,7 @@ fun NoteListScreen(
     var searchText by rememberSaveable { mutableStateOf("") }
     var showMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val bottomScrollBuffer = (LocalConfiguration.current.screenHeightDp * 0.35f).dp
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
@@ -254,7 +257,8 @@ fun NoteListScreen(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = bottomScrollBuffer)
                 ) {
                     val pinnedNotes = uiState.notes.filter { it.isPinned }
                     val unpinnedNotes = uiState.notes.filter { !it.isPinned }
@@ -267,7 +271,6 @@ fun NoteListScreen(
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
-                                    .animateItem()
                             )
                         }
                         items(pinnedNotes, key = { it.id }) { note ->
@@ -275,8 +278,7 @@ fun NoteListScreen(
                                 note = note,
                                 onClick = { onNoteClick(note.id) },
                                 onDelete = { viewModel.deleteNote(note) },
-                                onTogglePin = { viewModel.togglePin(note) },
-                                modifier = Modifier.animateItem()
+                                onTogglePin = { viewModel.togglePin(note) }
                             )
                         }
                     }
@@ -289,7 +291,6 @@ fun NoteListScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier
                                     .padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
-                                    .animateItem()
                             )
                         }
                     }
@@ -299,8 +300,7 @@ fun NoteListScreen(
                             note = note,
                             onClick = { onNoteClick(note.id) },
                             onDelete = { viewModel.deleteNote(note) },
-                            onTogglePin = { viewModel.togglePin(note) },
-                            modifier = Modifier.animateItem()
+                            onTogglePin = { viewModel.togglePin(note) }
                         )
                     }
                 }

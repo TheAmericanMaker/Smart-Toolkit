@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -76,6 +77,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -107,6 +109,7 @@ fun NoteEditScreen(
     val dictationDisclosureAcknowledged by
         viewModel.dictationDisclosureAcknowledged.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val bottomScrollBuffer = (LocalConfiguration.current.screenHeightDp * 0.35f).dp
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showTemplates by rememberSaveable { mutableStateOf(false) }
@@ -674,7 +677,8 @@ fun NoteEditScreen(
 
                     LazyColumn(
                         state = lazyListState,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(bottom = bottomScrollBuffer)
                     ) {
                         // Unchecked items first
                         itemsIndexed(
