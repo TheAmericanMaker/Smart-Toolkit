@@ -28,14 +28,21 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 
@@ -126,9 +133,23 @@ fun ChecklistItemRow(
             iconStyle = iconStyle
         )
 
+        var fieldValue by remember(focusRequester) {
+            mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+        }
+        // Sync only when the parent's text is changed externally (template/OCR insert,
+        // toggle to/from checklist mode). Avoids resetting the caret on every keystroke.
+        LaunchedEffect(text) {
+            if (fieldValue.text != text) {
+                fieldValue = TextFieldValue(text, TextRange(text.length))
+            }
+        }
         BasicTextField(
-            value = text,
-            onValueChange = onTextChange,
+            value = fieldValue,
+            onValueChange = { newValue ->
+                val textChanged = newValue.text != fieldValue.text
+                fieldValue = newValue
+                if (textChanged) onTextChange(newValue.text)
+            },
             modifier = Modifier
                 .weight(1f)
                 .focusRequester(focusRequester)
@@ -139,7 +160,10 @@ fun ChecklistItemRow(
                 textDecoration = if (isChecked) TextDecoration.LineThrough else TextDecoration.None
             ),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Sentences
+            ),
             keyboardActions = KeyboardActions(onNext = { onEnterPressed() }),
             singleLine = true
         )
