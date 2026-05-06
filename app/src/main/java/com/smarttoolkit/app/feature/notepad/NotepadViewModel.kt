@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -77,6 +78,9 @@ class NotepadViewModel @Inject constructor(
 
     private val _focusItemIndex = MutableSharedFlow<Int>()
     val focusItemIndex = _focusItemIndex.asSharedFlow()
+
+    private val _contentExternalUpdate = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val contentExternalUpdate = _contentExternalUpdate.asSharedFlow()
 
     val showOcrHint: StateFlow<Boolean> = preferencesRepository.ocrHintShown
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -161,12 +165,9 @@ class NotepadViewModel @Inject constructor(
     }
 
     fun onChecklistItemTextChange(index: Int, text: String) {
-        val capitalized = text.replaceFirstChar {
-            if (it.isLowerCase()) it.titlecase() else it.toString()
-        }
         val items = _uiState.value.checklistItems.toMutableList()
         if (index < items.size) {
-            items[index] = items[index].copy(text = capitalized)
+            items[index] = items[index].copy(text = text)
             _uiState.value = _uiState.value.copy(checklistItems = items)
             scheduleAutoSave()
         }
@@ -276,14 +277,18 @@ class NotepadViewModel @Inject constructor(
     }
 
     fun applyTemplate(title: String, type: NoteType, items: List<String>) {
+        val newContent = if (type == NoteType.TEXT) items.joinToString("\n") else ""
         _uiState.value = _uiState.value.copy(
             title = title,
             type = type,
-            content = if (type == NoteType.TEXT) items.joinToString("\n") else "",
+            content = newContent,
             checklistItems = if (type == NoteType.CHECKLIST) {
                 items.map { ChecklistItemUiState(text = it) } + ChecklistItemUiState()
             } else emptyList()
         )
+        if (type == NoteType.TEXT) {
+            viewModelScope.launch { _contentExternalUpdate.emit(newContent) }
+        }
     }
 
     fun onExtractedText(text: String) {
@@ -299,7 +304,9 @@ class NotepadViewModel @Inject constructor(
             _uiState.value = state.copy(checklistItems = items)
         } else {
             val separator = if (state.content.isNotBlank()) "\n" else ""
-            _uiState.value = state.copy(content = state.content + separator + lines.joinToString("\n"))
+            val newContent = state.content + separator + lines.joinToString("\n")
+            _uiState.value = state.copy(content = newContent)
+            viewModelScope.launch { _contentExternalUpdate.emit(newContent) }
         }
         scheduleAutoSave()
     }
@@ -403,7 +410,7 @@ class NotepadViewModel @Inject constructor(
             val id = repository.saveNote(note)
             if (savedNoteId <= 0) {
                 savedNoteId = id
-                _uiState.value = state.copy(isNew = false)
+                _uiState.update { it.copy(isNew = false) }
             }
 
             // Save image associations for new images
@@ -411,18 +418,16 @@ class NotepadViewModel @Inject constructor(
             for ((index, img) in currentImages.withIndex()) {
                 if (img.isNew && img.id == 0L) {
                     val imageId = repository.addImage(savedNoteId, img.filePath, index)
-                    val updated = _uiState.value.images.toMutableList()
-                    val imgIndex = updated.indexOfFirst { it.tempEquals(img) }
-                    if (imgIndex >= 0) {
-                        updated[imgIndex] = updated[imgIndex].copy(id = imageId, isNew = false)
-                        _uiState.value = _uiState.value.copy(images = updated)
+                    _uiState.update { current ->
+                        val updated = current.images.toMutableList()
+                        val imgIndex = updated.indexOfFirst { it.filePath == img.filePath }
+                        if (imgIndex >= 0) {
+                            updated[imgIndex] = updated[imgIndex].copy(id = imageId, isNew = false)
+                            current.copy(images = updated)
+                        } else current
                     }
                 }
             }
         }
-    }
-
-    private fun NoteImageUiState.tempEquals(other: NoteImageUiState): Boolean {
-        return filePath == other.filePath
     }
 }

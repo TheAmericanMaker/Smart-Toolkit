@@ -114,7 +114,8 @@ fun NoteEditScreen(
 
     var showTemplates by rememberSaveable { mutableStateOf(false) }
     var viewingImageIndex by remember { mutableIntStateOf(-1) }
-    var contentFieldValue by remember { mutableStateOf(TextFieldValue(state.content)) }
+    var contentFieldValue by remember { mutableStateOf(TextFieldValue(state.content, TextRange(state.content.length))) }
+    var contentInitialized by rememberSaveable { mutableStateOf(false) }
     var showDictationDisclosure by rememberSaveable { mutableStateOf(false) }
     var pendingDictationTarget by rememberSaveable { mutableStateOf<String?>(null) }
     val lazyListState = rememberLazyListState()
@@ -126,10 +127,19 @@ fun NoteEditScreen(
         }
     }
 
-    // Sync from ViewModel when content changes externally (template, OCR, etc.)
-    LaunchedEffect(state.content) {
-        if (contentFieldValue.text != state.content) {
+    // One-shot initialization once the note finishes loading from the DB.
+    LaunchedEffect(state.isLoaded) {
+        if (state.isLoaded && !contentInitialized) {
             contentFieldValue = TextFieldValue(state.content, TextRange(state.content.length))
+            contentInitialized = true
+        }
+    }
+
+    // Sync only on explicit external content writes (template, OCR).
+    // Do NOT sync on every keystroke — that creates a feedback loop that resets the cursor.
+    LaunchedEffect(Unit) {
+        viewModel.contentExternalUpdate.collect { newContent ->
+            contentFieldValue = TextFieldValue(newContent, TextRange(newContent.length))
         }
     }
 
