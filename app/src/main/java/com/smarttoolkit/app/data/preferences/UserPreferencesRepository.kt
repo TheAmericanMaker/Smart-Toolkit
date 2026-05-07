@@ -1,0 +1,185 @@
+package com.smarttoolkit.app.data.preferences
+
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class UserPreferencesRepository @Inject constructor(
+    private val dataStore: DataStore<Preferences>
+) {
+    private companion object {
+        val DARK_MODE = booleanPreferencesKey("dark_mode")
+        val FAVORITE_ORDER = stringPreferencesKey("favorite_order")
+        val USE_SYSTEM_THEME = booleanPreferencesKey("use_system_theme")
+        val COLOR_THEME = stringPreferencesKey("color_theme")
+        val OCR_HINT_SHOWN = booleanPreferencesKey("ocr_hint_shown")
+        val DICTATION_DISCLOSURE_ACKNOWLEDGED =
+            booleanPreferencesKey("dictation_disclosure_acknowledged")
+        val LAST_ACTIVE_ROUTE = stringPreferencesKey("last_active_route")
+
+        // Utility persistence keys
+        val TALLY_COUNT = intPreferencesKey("tally_count")
+        val TIP_PERCENTAGE = intPreferencesKey("tip_percentage")
+        val UC_CATEGORY = intPreferencesKey("uc_category")
+        val UC_FROM_UNIT = intPreferencesKey("uc_from_unit")
+        val UC_TO_UNIT = intPreferencesKey("uc_to_unit")
+        val TIMER_HOURS = intPreferencesKey("timer_hours")
+        val TIMER_MINUTES = intPreferencesKey("timer_minutes")
+        val TIMER_SECONDS = intPreferencesKey("timer_seconds")
+        val RULER_DPI_OFFSET = floatPreferencesKey("ruler_dpi_offset")
+        val TIMER_ALARM_SOUND = stringPreferencesKey("timer_alarm_sound")
+        val TIMER_REPEAT = booleanPreferencesKey("timer_repeat")
+        val SOUND_METER_OFFSET = floatPreferencesKey("sound_meter_offset")
+
+        // Stopwatch persistence
+        val STOPWATCH_ACCUMULATED_MS = stringPreferencesKey("stopwatch_accumulated_ms")
+        val STOPWATCH_LAST_LAP_MS = stringPreferencesKey("stopwatch_last_lap_ms")
+        val STOPWATCH_LAPS_JSON = stringPreferencesKey("stopwatch_laps_json")
+        val TALLY_COUNTERS_JSON = stringPreferencesKey("tally_counters_json")
+    }
+
+    val darkMode: Flow<Boolean> = dataStore.data.map { it[DARK_MODE] ?: false }
+    val useSystemTheme: Flow<Boolean> = dataStore.data.map { it[USE_SYSTEM_THEME] ?: true }
+    val colorTheme: Flow<String> = dataStore.data.map { it[COLOR_THEME] ?: "DYNAMIC" }
+    val favorites: Flow<List<String>> = dataStore.data.map { prefs ->
+        prefs[FAVORITE_ORDER]?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+    }
+
+    val ocrHintShown: Flow<Boolean> = dataStore.data.map { it[OCR_HINT_SHOWN] ?: false }
+    val dictationDisclosureAcknowledged: Flow<Boolean> = dataStore.data.map {
+        it[DICTATION_DISCLOSURE_ACKNOWLEDGED] ?: false
+    }
+    val lastActiveRoute: Flow<String?> = dataStore.data.map { it[LAST_ACTIVE_ROUTE] }
+
+    suspend fun setOcrHintShown() {
+        dataStore.edit { it[OCR_HINT_SHOWN] = true }
+    }
+
+    suspend fun acknowledgeDictationDisclosure() {
+        dataStore.edit { it[DICTATION_DISCLOSURE_ACKNOWLEDGED] = true }
+    }
+
+    suspend fun setLastActiveRoute(route: String?) {
+        dataStore.edit {
+            if (route.isNullOrBlank()) {
+                it.remove(LAST_ACTIVE_ROUTE)
+            } else {
+                it[LAST_ACTIVE_ROUTE] = route
+            }
+        }
+    }
+
+    suspend fun setDarkMode(enabled: Boolean) {
+        dataStore.edit { it[DARK_MODE] = enabled }
+    }
+
+    suspend fun setUseSystemTheme(enabled: Boolean) {
+        dataStore.edit { it[USE_SYSTEM_THEME] = enabled }
+    }
+
+    suspend fun setColorTheme(theme: String) {
+        dataStore.edit { it[COLOR_THEME] = theme }
+    }
+
+    suspend fun toggleFavorite(utilityId: String) {
+        dataStore.edit { prefs ->
+            val current = prefs[FAVORITE_ORDER]?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+            prefs[FAVORITE_ORDER] = if (utilityId in current) {
+                (current - utilityId).joinToString(",")
+            } else {
+                (current + utilityId).joinToString(",")
+            }
+        }
+    }
+
+    suspend fun reorderFavorite(fromIndex: Int, toIndex: Int) {
+        dataStore.edit { prefs ->
+            val current = prefs[FAVORITE_ORDER]?.split(",")?.filter { it.isNotEmpty() }?.toMutableList() ?: return@edit
+            if (fromIndex in current.indices && toIndex in current.indices) {
+                val item = current.removeAt(fromIndex)
+                current.add(toIndex, item)
+                prefs[FAVORITE_ORDER] = current.joinToString(",")
+            }
+        }
+    }
+
+    // Tally Counter
+    val tallyCount: Flow<Int> = dataStore.data.map { it[TALLY_COUNT] ?: 0 }
+    suspend fun setTallyCount(count: Int) { dataStore.edit { it[TALLY_COUNT] = count } }
+
+    // Tally Counter (multiple)
+    val tallyCountersJson: Flow<String> = dataStore.data.map { it[TALLY_COUNTERS_JSON] ?: "" }
+    suspend fun setTallyCountersJson(json: String) { dataStore.edit { it[TALLY_COUNTERS_JSON] = json } }
+
+    // Tip Calculator
+    val tipPercentage: Flow<Int> = dataStore.data.map { it[TIP_PERCENTAGE] ?: 15 }
+    suspend fun setTipPercentage(percent: Int) { dataStore.edit { it[TIP_PERCENTAGE] = percent } }
+
+    // Unit Converter
+    val ucCategory: Flow<Int> = dataStore.data.map { it[UC_CATEGORY] ?: 0 }
+    val ucFromUnit: Flow<Int> = dataStore.data.map { it[UC_FROM_UNIT] ?: 0 }
+    val ucToUnit: Flow<Int> = dataStore.data.map { it[UC_TO_UNIT] ?: 1 }
+    suspend fun setUcSelections(category: Int, from: Int, to: Int) {
+        dataStore.edit {
+            it[UC_CATEGORY] = category
+            it[UC_FROM_UNIT] = from
+            it[UC_TO_UNIT] = to
+        }
+    }
+
+    // Timer
+    val timerHours: Flow<Int> = dataStore.data.map { it[TIMER_HOURS] ?: 0 }
+    val timerMinutes: Flow<Int> = dataStore.data.map { it[TIMER_MINUTES] ?: 5 }
+    val timerSeconds: Flow<Int> = dataStore.data.map { it[TIMER_SECONDS] ?: 0 }
+    suspend fun setTimerDuration(h: Int, m: Int, s: Int) {
+        dataStore.edit {
+            it[TIMER_HOURS] = h
+            it[TIMER_MINUTES] = m
+            it[TIMER_SECONDS] = s
+        }
+    }
+
+    // Timer alarm sound
+    val timerAlarmSound: Flow<String> = dataStore.data.map { it[TIMER_ALARM_SOUND] ?: "" }
+    suspend fun setTimerAlarmSound(uri: String) { dataStore.edit { it[TIMER_ALARM_SOUND] = uri } }
+
+    // Timer repeat
+    val timerRepeat: Flow<Boolean> = dataStore.data.map { it[TIMER_REPEAT] ?: false }
+    suspend fun setTimerRepeat(enabled: Boolean) { dataStore.edit { it[TIMER_REPEAT] = enabled } }
+
+    // Ruler
+    val rulerDpiOffset: Flow<Float> = dataStore.data.map { it[RULER_DPI_OFFSET] ?: 0f }
+    suspend fun setRulerDpiOffset(offset: Float) { dataStore.edit { it[RULER_DPI_OFFSET] = offset } }
+
+    // Sound Meter calibration
+    val soundMeterOffset: Flow<Float> = dataStore.data.map { it[SOUND_METER_OFFSET] ?: 0f }
+    suspend fun setSoundMeterOffset(offset: Float) { dataStore.edit { it[SOUND_METER_OFFSET] = offset } }
+
+    // Stopwatch
+    val stopwatchAccumulatedMs: Flow<Long> = dataStore.data.map { (it[STOPWATCH_ACCUMULATED_MS] ?: "0").toLongOrNull() ?: 0L }
+    val stopwatchLastLapMs: Flow<Long> = dataStore.data.map { (it[STOPWATCH_LAST_LAP_MS] ?: "0").toLongOrNull() ?: 0L }
+    val stopwatchLapsJson: Flow<String> = dataStore.data.map { it[STOPWATCH_LAPS_JSON] ?: "" }
+    suspend fun saveStopwatchState(accumulatedMs: Long, lastLapMs: Long, lapsJson: String) {
+        dataStore.edit {
+            it[STOPWATCH_ACCUMULATED_MS] = accumulatedMs.toString()
+            it[STOPWATCH_LAST_LAP_MS] = lastLapMs.toString()
+            it[STOPWATCH_LAPS_JSON] = lapsJson
+        }
+    }
+    suspend fun clearStopwatchState() {
+        dataStore.edit {
+            it.remove(STOPWATCH_ACCUMULATED_MS)
+            it.remove(STOPWATCH_LAST_LAP_MS)
+            it.remove(STOPWATCH_LAPS_JSON)
+        }
+    }
+}
