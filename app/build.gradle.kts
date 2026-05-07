@@ -10,15 +10,6 @@ android {
     namespace = "com.smarttoolkit.app"
     compileSdk = 35
 
-    signingConfigs {
-        getByName("debug") {
-            storeFile = rootProject.file("debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
-    }
-
     defaultConfig {
         applicationId = "com.smarttoolkit.app"
         minSdk = 26
